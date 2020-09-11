@@ -16,17 +16,26 @@ Note: Requires local server to be running, eg. in terminal window:
     <meta name="description" content="Mark's Coin Cap">
     <meta name="author" content="Mark Suscens">
 
-    <title>Mark's Coin Cap</title>
+    <title>Crypto Coin Market</title>
+
+   <!-- Bootstrap CSS -->
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
 
     <!-- Include Third-party libraries.  Q. Better to include in logic.js file?? -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+ <!--   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  -->
 
     <!-- Include applications css styles and JS code -->
     <link rel="stylesheet" href="styles.css">
@@ -35,8 +44,254 @@ Note: Requires local server to be running, eg. in terminal window:
   </head>
 
   <body>
-    <h1>Cryptocurrencies by Market Capitalisation</h1>
 
+    <div class="container bg-white">
+    
+      <!-- Top row for Heading text  -->
+      <div class="row">
+        <div class="col-sm-12" align="center">
+          <h1>Cryptocurrency Coins</h1>
+          <h2>Ranked by Market Capitilisation</h2>
+          <br>
+        </div>
+      </div>
+
+      <!-- Second row for page controls (nav tabs, filters and paging controls) -->
+      <div class="row">
+
+        <!-- Left-side for nav tabs  -->
+        <div class="col-sm-6">
+          <ul class="nav nav-tabs">
+            <li class="nav-item">
+              <a class="nav-link active" href="#">Cryptocurrencies</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Exchanges</a>
+            </li>
+          </ul>
+        </div>
   
+        <!-- Right-side for filters and paging controls  -->
+        <div class="col-sm-6">
+          <ul class="nav justify-content-end">
+            <li class="nav-item">
+              <button type="submit" class="btn btn-light">Filters</button>
+            </li>
+            <li class="nav-item">
+
+              <div class="dropdown">
+                <button type="button" class="btn btn-light dropdown-toggle"
+                        data-toggle="dropdown">Currency</button>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#">USD</a>
+                  <a class="dropdown-item" href="#">BTC</a>
+                  <a class="dropdown-item" href="#">ETH</a>
+                </div>
+              </div>
+
+            </li>
+
+            <li class="nav-item btn-group">
+                <button type="submit" class="btn btn-light">Next 100-></button>
+                <button type="submit" class="btn btn-light">View All</button>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Filter settings control area -->
+      <div class="row">
+        <!-- Left-side for filter button/drop-down menu controls-->
+        <div class="col-sm-10">
+          <ul class="nav">
+            <li class="nav-item dropdown">
+              <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Market Cap</button>
+
+               <!-- TO DO : Create a component that can be used for each of the filter buttons
+                            dropdown range set menus.  Below is placeholder HTML code that will
+                            be replaced by filter range dropdown component.  Component function
+                            to be passed data object with title, bottom & top-range default values.
+                -->
+
+                <div class="dropdown-menu">
+                    <form>
+                      <div class="form-group" align="center">
+                        <h6>Market Cap range</h6>
+                      </div>
+                    </form>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Price</button>
+                    <div class="dropdown-menu">
+                      <form>
+                        <div class="form-group" align="center">
+                              <h6>Price range</h6>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Volume (24h)</button>
+                    <div class="dropdown-menu">
+                      <form>
+                        <div class="form-group" align="center">
+                          <h6>Volume (24h) range</h6>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Circulating Supply</button>
+                    <div class="dropdown-menu">
+                      <form>
+                        <div class="form-group" align="center">
+                          <h6>Circulating Supply range</h6>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Change (24h)</button>
+                    <div class="dropdown-menu">
+                      <form>
+                        <div class="form-group" align="center">
+                          <h6>Change (24h) range</h6>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Extra filter for 7-day change. (Will likewise display 7-day change in table) -->
+            <li class="nav-item">
+                <div class="dropdown">
+                    <button type="button" class="btn btn-light dropdown-toggle"
+                            data-toggle="dropdown">Change (7d)</button>
+                    <div class="dropdown-menu">
+                      <form>
+                        <div class="form-group" align="center">
+                          <h6>Change (7d) range</h6>
+                        </div>
+                      </form>
+                    </div>
+                </div>
+            </li>
+
+          </ul>
+        </div>
+
+        <!-- Right-side for clear all filters control   -->
+        <div class="col-sm-2 nav justify-content-end">
+            <button type="button">Clear filters</button>        
+        </div>
+
+      </div>
+
+
+      <!-- Main page area - ie. Table of Coins  -->
+      <!-- Hardcoded static dummy data for now-->
+      <!-- TODO: Populate from a list of data objects (list of data objects to be
+                    got from CoinGeko API calls) -->                
+
+<!-- TODO - Confirm best way to make responsive table -->
+<!--     <div class="row">
+      <div class="col-sm-12">
+-->
+       <div class="table-responsive-sm"> 
+
+        <table class="table">
+            <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Coin</th>
+                  <th>Price</th>
+                  <th>Change (24h)</th>
+                  <th>Change (7d)</th>
+                  <th>Volume (24h)</th>
+                  <th>Market Cap</th>
+                  <th>Price graph (7d)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Bitcoin (BTC)</td>
+                  <td>$10,282.73</td>
+                  <td>0.3%</td>
+                  <td>-9.9%</td>
+                  <td>$36,563,070,765</td>
+                  <td>$190,075,873,306</td>
+                  <td>BTC Price graph here...</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Ethereum (ETH)</td>
+                    <td>$364.58</td>
+                    <td>4.8%</td>
+                    <td>-17.0%</td>
+                    <td>$30,040,602,621</td>
+                    <td>$41,027,716,998</td>
+                    <td>ETH Price graph here...</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Tether (USDT)</td>
+                    <td>$1.00</td>
+                    <td>-0.0%</td>
+                    <td>0.1%</td>
+                    <td>$39,016,457,203</td>
+                    <td>$14,454,247,026</td>
+                    <td>USDT Price graph here...</td>
+                </tr>
+              </tbody>
+
+        </table>
+
+      </div>
+<!--  </div>  --> 
+
+      <!-- Table footer (with table paging controls)  -->
+      <!-- TODO _ Confirm best way of organising paging buttons OR can I simplify??-->
+      <div class="row">
+        <div class="col-sm-12">
+          <ul class="nav justify-content-end">
+
+            <li class="nav-item btn-group">
+              <button type="submit" class="btn btn-light">Next 100-></button>
+              <button type="submit" class="btn btn-light">View All</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Page Footer-->
+      <div class="row">
+        <div class="col-sm-12" align="center">
+          <p><strong>Total Market Cap: $325,118,468,342</strong></p>
+          <p>Last updated: Tue, 08 Sep 2020 14:25:18 UTC</p>
+        </div>
+      </div>
+
+    </div>
+
+
   </body>
 </html>
