@@ -79,9 +79,6 @@ Note: Requires local server to be running, eg. in terminal window:
     </div>
 
     <!-- Main page area - ie. Table of Coins  -->
-    <!-- Hardcoded static dummy data for now-->
-    <!-- TODO: Populate from a list of data objects (list of data objects to be
-                    got from CoinGeko API calls) -->
     <div class="table-responsive">
       <table class="table">
         <thead>
@@ -96,39 +93,7 @@ Note: Requires local server to be running, eg. in terminal window:
             <th>Price graph (7d)</th>
           </tr>
         </thead>
-        <tbody id="myTableCoinData">
-          <!-- Temporary hard-coded table rows and data below.
-                TODO: Populate "myTableCoinData" by appending HTML rows -->
-          <tr>
-            <td>1</td>
-            <td>Bitcoin (BTC)</td>
-            <td>$10,282.73</td>
-            <td>0.3%</td>
-            <td>-9.9%</td>
-            <td>$36,563,070,765</td>
-            <td>$190,075,873,306</td>
-            <td>BTC Price graph here...</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Ethereum (ETH)</td>
-            <td>$364.58</td>
-            <td>4.8%</td>
-            <td>-17.0%</td>
-            <td>$30,040,602,621</td>
-            <td>$41,027,716,998</td>
-            <td>ETH Price graph here...</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Tether (USDT)</td>
-            <td>$1.00</td>
-            <td>-0.0%</td>
-            <td>0.1%</td>
-            <td>$39,016,457,203</td>
-            <td>$14,454,247,026</td>
-            <td>USDT Price graph here...</td>
-          </tr>
+        <tbody id="myCoinTableBody">
         </tbody>
 
       </table>
@@ -144,12 +109,8 @@ Note: Requires local server to be running, eg. in terminal window:
     </div>
 
     <!-- Page Footer-->
-    <!-- TODO - Confirm best way of organising footer. Pehaps simplify by 
-      removing "row" and/or "col-sm-12" !?  -->
     <div class="row">
-      <div class="col-sm-12" align="center">
-        <p><strong>Total Market Cap: $325,118,468,342</strong></p>
-        <p>Last updated: Tue, 08 Sep 2020 14:25:18 UTC</p>
+      <div id="myPageFooter" , class="col-sm-12" align="center">
       </div>
     </div>
 
@@ -169,7 +130,9 @@ Note: Requires local server to be running, eg. in terminal window:
     integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
     crossorigin="anonymous"></script>
 
+  <script src="data.js"></script>
   <script src="logic.js"></script>
+
 </footer>
 
 </html>
