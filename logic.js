@@ -14,6 +14,11 @@
 let coinObjects = dummyGetCoins()
 console.log("coinObjects = ", coinObjects)
 
+// Initialise the currency formatters (for 0 & 2 decimail places)
+let currency2DP = newCurrencyFormater("USD", 2)
+let currency0DP = newCurrencyFormater("USD", 0)
+
+
 $("document").ready(function () {
 
     // Populate the page with the coin data
@@ -27,34 +32,36 @@ $("document").ready(function () {
 // FUNCTIONS
 
 function updateCoinTable(myCoins) {
-    // Fill the table with coin data, one row for each coin
-
+    // Fill the table with coin data (with one row for each coin)
     let htmlCoinTableID = $("#myCoinTableBody")
-
     htmlCoinTableID.html("")
+
     $.each(myCoins, function (index, coin) {
         let coinTableRowHTML = constructTableRowHtml(coin)
         console.log(index + " coinTableRowHTML: ", coinTableRowHTML)
-        // add row of coin data to the table
         htmlCoinTableID.append(coinTableRowHTML)
     })
 }
 
 
 function constructTableRowHtml(coin) {
-    // Create the HTML string for a coin's table row, using the given coin data.
-    // TODO: Add currency & percentage symbols, and round/format figures
+    // Create and return the HTML string for a coin's table row (using the given coin data).
 
-    let coinRowHtml = `<tr>
-                             <td>` + coin.market_cap_rank + `</td>
-                             <td>` + coin.name + `</td>
-                             <td>` + coin.current_price + `</td>
-                             <td>` + coin.price_change_percentage_24h_in_currency + `</td>
-                             <td>` + "Unknown" + `</td>
-                             <td>` + "Unknown" + `</td>
-                             <td>` + coin.market_cap + `</td>
-                             <td>` + "Price-Graph-Here..." + `</td>
-                            </tr>`
+    let coinNameLine = '<img src="' + coin.image + '"border=3 height=25 width=25>'
+        + ' ' + coin.name + ' (' + coin.symbol + ')'
+
+    let coinRowHtml=`<tr>
+                        <td>` + coin.market_cap_rank + `</td>
+                        <td>` + coinNameLine + `</td>
+                        <td>` + currency2DP.format(coin.current_price) + `</td>
+                        <td><span style="` + cssColorForNumber(
+                                        coin.price_change_percentage_24h_in_currency) + `">` +
+                            coin.price_change_percentage_24h_in_currency.toFixed(2) + `%</span></td>
+                        <td>` + "Unknown" + `</td>
+                        <td>` + "Unknown" + `</td>
+                        <td>` + currency0DP.format(coin.market_cap) + `</td>
+                        <td>` + "Price-Graph-Here..." + `</td>
+                    </tr>`
 
     return coinRowHtml
 }
@@ -62,27 +69,19 @@ function constructTableRowHtml(coin) {
 
 
 function updatePageFooter(myCoins) {
-    // Update the HTML string of the table footer (with lastest coin data obtained).
-    // TODO: Add currency and formating of marketcap figure and last update day/time.
-    //        Eg. Total Market Cap: $325,118,468,342
-    //            Last updated: Tue, 08 Sep 2020 14:25:18 UTC
+    // Update the HTML string of the table footer with latest coin data provided.
 
     let htmlFooterID = $("#myPageFooter")
     htmlFooterID.html("")
 
     let totalMarketCap = sumMarketCap(myCoins)
+    let lastUpdated = myCoins[0].last_updated   
 
-    // We'll use the first coin returned last updated time as the
-    // last updated time for all coins
-    // TODO: Consider if there's a better approach for overall last updated time!?
-    let lastUpdated = myCoins[0].last_updated
-
-    let footerHtml = `<p><strong>Total Market Cap: ` + totalMarketCap +
+    let footerHtml = `<p><strong>Total Market Cap: ` + currency0DP.format(totalMarketCap) +
         `</strong></p>
                         <p>Last updated: ` + lastUpdated + `</p>`
 
     htmlFooterID.append(footerHtml)
-
 }
 
 
@@ -92,4 +91,15 @@ function sumMarketCap(myCoins) {
         sum += coin.market_cap
     }
     return sum
+}
+
+function cssColorForNumber(number) {
+    // Return css color attribute for a given number:
+    // Green for a positive number, red for a negative number, and black if zero.
+
+    let color = "black"
+    if (number > 0) color = "green"
+    else if (number < 0) color = "red"
+
+    return "color:" + color
 }
