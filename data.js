@@ -876,7 +876,7 @@ async function getCoins() {
 // HELPER FUNCTIONS
 
 function newCurrencyFormater(currencyType, decimalPlaces) {
-    let formatter = new Intl.NumberFormat("en-US",
+    const formatter = new Intl.NumberFormat("en-US",
         {
             style: "currency", currency: currencyType,
             minimumFractionDigits: decimalPlaces,
