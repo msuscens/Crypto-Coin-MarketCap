@@ -5,3 +5,17 @@ body {
     color:#444444;
   }
 
+
+th[name="sortColumn"] {
+  cursor: pointer;
+}
+
+/* TODO - Make the column headers sticky 
+thead.sticky {
+  background:#f0f7fa;
+  position: -webkit-sticky;
+  position: sticky;
+  top: -1px;
+}
+*/
+

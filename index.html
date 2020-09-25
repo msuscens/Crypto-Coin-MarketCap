@@ -1,14 +1,5 @@
 <!DOCTYPE html>
 
-<!--
-My Coin Marketcap inspired project (Blockchain Developer Bootcamp Week 5).
-
-Note: Requires local server to be running, eg. in terminal window:
-  cd to code directory, and then
-  python3 -m http.server
-  (Or run from VS Code using LiveServer)
--->
-
 <html lang="en">
 
 <head>
@@ -22,6 +13,9 @@ Note: Requires local server to be running, eg. in terminal window:
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+  <!-- Font Awesome -->
+  <script src="https://kit.fontawesome.com/e0c2649351.js" crossorigin="anonymous"></script>
 
   <!-- Include applications css styles -->
   <link rel="stylesheet" href="styles.css">
@@ -61,6 +55,8 @@ Note: Requires local server to be running, eg. in terminal window:
         <div align="right">
           <div class="btn-group">
 
+            <button class="btn btn-light mr-4"><i class="fas fa-sync-alt"></i> Sync</button>
+
             <div class="dropdown">
               <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">Currency</button>
               <div class="dropdown-menu">
@@ -83,16 +79,28 @@ Note: Requires local server to be running, eg. in terminal window:
     <!-- Main page area - ie. Table of Coins  -->
     <div class="table-responsive">
       <table class="table">
-        <thead>
+        <thead class="sticky">
           <tr>
-            <th id="rankColumn" onclick="sortTableRows(event)">Rank</th>
-            <th id="nameColumn" onclick="sortTableRows(event)">Coin</th>
-            <th id="priceColumn" onclick="sortTableRows(event)">Price</th>
-            <th id="change24hrColumn" onclick="sortTableRows(event)">Change (24h)</th>
-            <th>Change (7d)</th>
-            <th>Volume (24h)</th>
-            <th id="marketCapColumn" onclick="sortTableRows(event)">Market Cap</th>
-            <th>Price graph (7d)</th>
+            <th id="rankColumn" name="sortColumn" onclick="sortTableRows(event)">Rank <span><i
+                  class="fas fa-sort-down"></i></span></th>
+            <th id="nameColumn" name="sortColumn" onclick="sortTableRows(event)">Coin <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="priceColumn" name="sortColumn" onclick="sortTableRows(event)">Price <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change1hrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (1hr) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change24hrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (24h) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change7dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (7d) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change30dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (30d) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change200dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (200d) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="change1yrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (1yr) <span><i
+                  class="fas fa-sort"></i></span></th>
+            <th id="marketCapColumn" name="sortColumn" onclick="sortTableRows(event)">Market Cap<span><i
+                  class="fas fa-sort"></i></span></th>
           </tr>
         </thead>
         <tbody id="myCoinTableBody">

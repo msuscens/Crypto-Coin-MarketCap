@@ -7,12 +7,13 @@
 // @ts-check
 
 // Obtain the Coin Data
-// Using dummy hardcoded coin data for now (albeit in the format that CoinGeko API would return).
+let coinObjects = dummyGetCoins()
+console.log("coinObjects = ", coinObjects)
+
+// Above is currently using dummy coin data for now.
 // TODO: Replace dummyGetCoins() with function that obtains data via coinGeko API calls:
 //              const defaultCurrency = "USD"
 //              let coinObjectList = getCoins( defaultCurrency )
-let coinObjects = dummyGetCoins()
-console.log("coinObjects = ", coinObjects)
 
 // Initialise the currency formatters (for 0 & 2 decimail places)
 const currency2DP = newCurrencyFormater("USD", 2)
@@ -21,30 +22,33 @@ const currency0DP = newCurrencyFormater("USD", 0)
 
 $("document").ready(function () {
 
-    // Populate the page with the coin data
-    updateCoinTable(coinObjects)
-    updatePageFooter(coinObjects)
+    // Display the coin data on the webpage
+    populateCoinTable(coinObjects)
+    populatePageFooter(coinObjects)
 
 })
 
 
-
 // FUNCTIONS
 
-function updateCoinTable(myCoins) {
-    // Fill the table with coin data (with one row for each coin)
+function populateCoinTable(myCoins) {  // Fill the table with coin data
+    
     const htmlCoinTableID = $("#myCoinTableBody")
     htmlCoinTableID.html("")
 
     $.each(myCoins, function (index, coin) {
         const coinTableRowHTML = constructTableRowHtml(coin)
-        htmlCoinTableID.append(coinTableRowHTML)
+
+        // Replace any 'NaN' numbers (so that instead '-' character will be displayed)                  
+        const coinRowHtmlwithNaNsReplaced = coinTableRowHTML.replace(/NaN/g, "-")
+
+        htmlCoinTableID.append(coinRowHtmlwithNaNsReplaced)
     })
 }
 
 
 function constructTableRowHtml(coin) {
-    // Create and return the HTML string for a coin's table row (using the given coin data).
+    // Create and return the HTML string for a coin's table row (using the given coin data)
 
     const coinNameLine = `<img src="${coin.image}"border=3 height=25 width=25> ${coin.name} (${coin.symbol})`
 
@@ -52,19 +56,34 @@ function constructTableRowHtml(coin) {
                             <td>${coin.market_cap_rank}</td>
                             <td>${coinNameLine}</td>
                             <td>${currency2DP.format(coin.current_price)}</td>
+
+                            <td><span style="${cssColorForNumber(coin.price_change_percentage_1h_in_currency)}">
+                                    ${coin.price_change_percentage_1h_in_currency.toFixed(2)}%</span></td>
+
                             <td><span style="${cssColorForNumber(coin.price_change_percentage_24h_in_currency)}">
                                     ${coin.price_change_percentage_24h_in_currency.toFixed(2)}%</span></td>
-                            <td>"Unknown"</td>
-                            <td>"Unknown" </td>
+
+                            <td><span style="${cssColorForNumber(coin.price_change_percentage_7d_in_currency)}">
+                                    ${coin.price_change_percentage_7d_in_currency.toFixed(2)}%</span></td>
+
+                            <td><span style="${cssColorForNumber(coin.price_change_percentage_30d_in_currency)}">
+                                    ${coin.price_change_percentage_30d_in_currency.toFixed(2)}%</span></td>
+                                    
+                            <td><span style="${cssColorForNumber(coin.price_change_percentage_200d_in_currency)}">
+                                    ${coin.price_change_percentage_200d_in_currency.toFixed(2)}%</span></td>
+
+                            <td><span style="${cssColorForNumber(coin.price_change_percentage_1y_in_currency)}">
+                                    ${coin.price_change_percentage_1y_in_currency.toFixed(2)}%</span></td>
+
                             <td>${currency0DP.format(coin.market_cap)}</td>
-                            <td>"Price-Graph-Here..."</td>
                         </tr>`
+
     return coinRowHtml
+
 }
 
 
-
-function updatePageFooter(myCoins) {
+function populatePageFooter(myCoins) {
     // Update the HTML string of the table footer with latest coin data provided.
 
     const htmlFooterID = $("#myPageFooter")
@@ -83,14 +102,13 @@ function updatePageFooter(myCoins) {
 function sumMarketCap(myCoins) {
     let sum = 0;
     for (let coin of myCoins) {
-        sum += coin.market_cap
+        sum += (coin.market_cap ? coin.market_cap : 0)
     }
     return sum
 }
 
 function cssColorForNumber(number) {
-    // Return css color attribute for a given number:
-    // Green for a positive number, red for a negative number, and black if zero.
+    // Create attribute string: green for positive number, red for a negative, and black if zero.
 
     let color = "black"
     if (number > 0) color = "green"
@@ -101,81 +119,96 @@ function cssColorForNumber(number) {
 
 function sortTableRows(event) {
 
-    let newSortOrder = undefined 
     const currentSortOrder = $(event.target).prop("order")
-    /* But this version below (using this) doesn't work - Why not ???
-        let currentSortOrder = $(this).prop("order")  
-    */
-    console.log("Previous: currentSortOrder = ", currentSortOrder)
+    let newSortOrder
 
-    // Check if table previously sorted on this attribute and if so reverse order
-    // to get data into the new sort order required
-    if ( (currentSortOrder == "descending") || (currentSortOrder == "ascending") ) {
+    if ((currentSortOrder == "descending") || (currentSortOrder == "ascending")) {
+        // Previously sorted on this column, so simply reverse data order
         coinObjects.reverse()
         newSortOrder = (currentSortOrder === "ascending") ? "descending" : "ascending"
     }
     else {  // Not previously sorted
         newSortOrder = "descending"  // default for sort
 
-        // Prepare a compare function for the attribute (that will be used in sorting)
+        // Prepare a compare function for the coin attribute
         const coinAttribute = getCoinObjectAttribute(event.target.id)
         const functionBody = createCompareFunctionBody(coinObjects[0], coinAttribute, newSortOrder)
-        console.log("functionBody = ", functionBody)
         const compareFunction = Function("a, b", functionBody)
 
-        // Sort the data (array of objects)
+        // Sort the coin data (array of coin objects)
         coinObjects.sort(compareFunction)
     }
-    
-    // Display the sorted data in the table
-    updateCoinTable(coinObjects)
 
-    // Update 'order' property to relect new sort order, and remove 'order' property from
-    // all other table column headings (since it is no longer valid if set on another column)
+    // Update the table with newly sorted coin data
+    setColumnHeadersSortOrder(event, newSortOrder)
+    populateCoinTable(coinObjects)
+}
+
+
+function setColumnHeadersSortOrder(event, newSortOrder) {
+
+    const unsortedIcon = '<i class="fas fa-sort"></i>'
+    const sortedAscendingIcon = '<i class="fas fa-sort-up"></i>'
+    const sortedDescendingIcon = '<i class="fas fa-sort-down"></i>'
+
+    // Set sort icons in table column headers
+    const sortOrderIcon = (newSortOrder === "ascending") ? sortedAscendingIcon : sortedDescendingIcon
+    $("[name='sortColumn']").find("span").html( unsortedIcon )
+    $("#" + event.target.id).find("span").html( sortOrderIcon )
+
+    // Set 'order' property on table column headings
     $(event.target).prop("order", newSortOrder)
     $(event.target).siblings().removeProp("order")
 
-    /* As above this version using this don't work - Why not?
-        $(this).prop("order", newSortOrder )
-        console.log("$(this).prop('order') = ", $(this).prop("order") )
-    */
 }
-
 
 function getCoinObjectAttribute(IdElement) {
 
-    let coinObjectItem = ""
+    let coinObjectAttribute = ""
 
     switch (IdElement) {
         case "rankColumn":
-            coinObjectItem = "market_cap_rank"
+            coinObjectAttribute = "market_cap_rank"
             break
         case "nameColumn":
-            coinObjectItem = "name"
+            coinObjectAttribute = "name"
             break
         case "priceColumn":
-            coinObjectItem = "current_price"
+            coinObjectAttribute = "current_price"
+            break
+        case "change1hrColumn":
+            coinObjectAttribute = "price_change_percentage_1h_in_currency"
             break
         case "change24hrColumn":
-            coinObjectItem = "price_change_percentage_24h"
+            coinObjectAttribute = "price_change_percentage_24h_in_currency"
+            break
+        case "change7dColumn":
+            coinObjectAttribute = "price_change_percentage_7d_in_currency"
+            break
+        case "change30dColumn":
+            coinObjectAttribute = "price_change_percentage_30d_in_currency"
+            break
+        case "change200dColumn":
+            coinObjectAttribute = "price_change_percentage_200d_in_currency"
+            break
+        case "change1yrColumn":
+            coinObjectAttribute = "price_change_percentage_1y_in_currency"
             break
         case "marketCapColumn":
-            coinObjectItem = "market_cap"
+            coinObjectAttribute = "market_cap"
             break
         default:
             throw ("Error: Unknown table column: " + IdElement)
-            break
-    }
-    return coinObjectItem;
-}
 
+    }
+    return coinObjectAttribute;
+}
 
 
 function createCompareFunctionBody(object, attribute, sortOrder) {
 
     const getTypeofCoinAttributeValue = Function("object", `return typeof object.${attribute}`)
     const coinAttributeValueType = getTypeofCoinAttributeValue(object)
-    //    console.log("coinAttributeValueType = ", coinAttributeValueType)
 
     let functionBody = ""
     if (coinAttributeValueType === "number") {
