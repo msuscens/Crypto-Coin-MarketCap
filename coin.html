@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Crypto Coin Market">
+    <meta name="author" content="Mark Suscens">
+
+    <title>Crypto Coin Market</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/e0c2649351.js" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <div class="container bg-white">
+        <!-- Header section; with logo and search bar  -->
+        <br>
+        <div class="row">
+            <div class="col-sm-1" align="left">
+                <h2><i class="fas fa-coins"></i></h2>
+            </div>
+            <div class="col-sm-8" align="left">
+                <h1>Cryptocurrency Prices</h1>
+            </div>
+
+            <div class="col-sm-3" align="right">
+                <div id="searchControl">
+                    <label for="myCoinSearchInput">Search</label>
+                    <input id="myCoinSearchInput" type="text" placeholder="Coin name or id"></input>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-sm-1">
+            </div>
+            <div class="col-sm-5" align="left">
+                <p><span id="coinIconNameSymbol">Coin Icon, Name (symbol)</span></p>
+            </div>
+
+            <div class="col-sm-4" align="left">
+                <span id="priceLine">PRICE (currency) [% chg 24hrs]</span>
+                <br>
+                <span id="priceInBtcLine">BTC PRICE [% change vs BTC]</span>
+            </div>
+
+            <div class="col-sm-2" align="right">
+                <p>Rank: <span id="mcRank">UNKNOWN</span></p>
+            </div>
+        </div>
+
+
+        <hr>
+
+        <!-- Price Chart    -->
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div id="btcMarket">
+                    <canvas id="myChart" width="800" height="400"></canvas>
+                    <p>Start Date: <input type="text" id="myDatepicker"></input>
+                        <button id="myShowChartButton">Show Chart</button>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Coin Basic Stats Area: MarketCap, Volume (24hour), Circulationg Supply, Max Supply -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Market Cap</th>
+                                <th>Volume (24hrs)</th>
+                                <th>Circulating Supply</th>
+                                <th>Max Supply</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coinFirstTableBody">
+                            <tr>
+                                <td>$199,118,239,120 USD</td>
+                                <td>$58,712,323,737 USD</td>
+                                <td>18,502,725 BTC</td>
+                                <td>21,000,000 BTC</td>
+                            </tr>
+                            <tr>
+                                <td>18,502,725 BTC</td>
+                                <td>5,455,743 BTC</td>
+
+                            </tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th>Additional Stats:</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Info 1: 123456</td>
+                                <td>Info 2: 123456</td>
+                                <td>Info 3: 123456</td>
+                                <td>Info 4: 123456</td>
+                            </tr>
+                            <tr>
+                                <td>Info 5: 123456</td>
+                                <td>Info 6: 123456</td>
+                                <td>Info 7: 123456</td>
+                                <td>Info 8: 123456</td>
+                            </tr>
+                            <tr>
+                                <td>Info 9: 123456</td>
+                                <td>Info 10: 123456</td>
+                                <td>Info 11: 123456</td>
+                                <td>Info 12: 123456</td>
+                            </tr>
+                        </tbody>
+
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<footer>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!--
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+      integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+      crossorigin="anonymous"></script>
+  -->
+
+    <script src="helpers.js"></script>
+    <script src="interfaceAPI.js"></script>
+    <script src="coinLogic.js"></script>
+
+</footer>
+
+</html>

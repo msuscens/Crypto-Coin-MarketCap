@@ -7,17 +7,14 @@
 // @ts-check
 
 // Obtain the Coin Data
-let coinObjects = dummyGetCoins()
+const coinObjects = dummyGetCoins()
 console.log("coinObjects = ", coinObjects)
 
-// Above is currently using dummy coin data for now.
+// Above is currently using dummy coin data.
 // TODO: Replace dummyGetCoins() with function that obtains data via coinGeko API calls:
 //              const defaultCurrency = "USD"
 //              let coinObjectList = getCoins( defaultCurrency )
 
-// Initialise the currency formatters (for 0 & 2 decimail places)
-const currency2DP = newCurrencyFormater("USD", 2)
-const currency0DP = newCurrencyFormater("USD", 0)
 
 
 $("document").ready(function () {
@@ -52,7 +49,7 @@ function constructTableRowHtml(coin) {
 
     const coinNameLine = `<img src="${coin.image}"border=3 height=25 width=25> ${coin.name} (${coin.symbol})`
 
-    const coinRowHtml = `<tr> 
+    const coinRowHtml = `<tr onclick="displayCoinPage(event)"> 
                             <td>${coin.market_cap_rank}</td>
                             <td>${coinNameLine}</td>
                             <td>${currency2DP.format(coin.current_price)}</td>
@@ -99,23 +96,7 @@ function populatePageFooter(myCoins) {
 }
 
 
-function sumMarketCap(myCoins) {
-    let sum = 0;
-    for (let coin of myCoins) {
-        sum += (coin.market_cap ? coin.market_cap : 0)
-    }
-    return sum
-}
-
-function cssColorForNumber(number) {
-    // Create attribute string: green for positive number, red for a negative, and black if zero.
-
-    let color = "black"
-    if (number > 0) color = "green"
-    else if (number < 0) color = "red"
-
-    return "color:" + color
-}
+// Event Handlers
 
 function sortTableRows(event) {
 
@@ -162,77 +143,16 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
 
 }
 
-function getCoinObjectAttribute(IdElement) {
 
-    let coinObjectAttribute = ""
+function displayCoinPage(event){
 
-    switch (IdElement) {
-        case "rankColumn":
-            coinObjectAttribute = "market_cap_rank"
-            break
-        case "nameColumn":
-            coinObjectAttribute = "name"
-            break
-        case "priceColumn":
-            coinObjectAttribute = "current_price"
-            break
-        case "change1hrColumn":
-            coinObjectAttribute = "price_change_percentage_1h_in_currency"
-            break
-        case "change24hrColumn":
-            coinObjectAttribute = "price_change_percentage_24h_in_currency"
-            break
-        case "change7dColumn":
-            coinObjectAttribute = "price_change_percentage_7d_in_currency"
-            break
-        case "change30dColumn":
-            coinObjectAttribute = "price_change_percentage_30d_in_currency"
-            break
-        case "change200dColumn":
-            coinObjectAttribute = "price_change_percentage_200d_in_currency"
-            break
-        case "change1yrColumn":
-            coinObjectAttribute = "price_change_percentage_1y_in_currency"
-            break
-        case "marketCapColumn":
-            coinObjectAttribute = "market_cap"
-            break
-        default:
-            throw ("Error: Unknown table column: " + IdElement)
+ //   console.log("$(event.target).val() = ", $(event.target).val() )
+ //   console.log("$(event.target.id) = ",  $(event.target.id) )
 
-    }
-    return coinObjectAttribute;
+ // *** TODO - Use ?param on the url to pass coinid and currencyid to the coin window
+ // *** Alternatively use local storage: 
+ //        https://stackoverflow.com/questions/12226564/jquery-passing-data-between-pages
+
+    window.location.href = "coin.html"
+
 }
-
-
-function createCompareFunctionBody(object, attribute, sortOrder) {
-
-    const getTypeofCoinAttributeValue = Function("object", `return typeof object.${attribute}`)
-    const coinAttributeValueType = getTypeofCoinAttributeValue(object)
-
-    let functionBody = ""
-    if (coinAttributeValueType === "number") {
-
-        functionBody = (sortOrder === "ascending") ?
-            `return a.${attribute} - b.${attribute}` :
-            `return b.${attribute} - a.${attribute}`
-    }
-    else if (coinAttributeValueType === "string") {
-
-        const startOfBody = `const x = a.${attribute}.toLowerCase()
-                             const y = b.${attribute}.toLowerCase()
-                            `
-        const endofBody = (sortOrder === "ascending") ?
-            `if (x < y) {return -1}
-             if (x > y) {return 1}
-             return 0` :
-            `if (x > y) {return -1}
-             if (x < y) {return 1}
-             return 0`
-        functionBody = startOfBody + endofBody
-    }
-    else throw ("Error: Unexpected coinAttributeValueType of :" + coinAttributeValueType)
-
-    return functionBody
-}
-
