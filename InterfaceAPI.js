@@ -12,18 +12,40 @@
 const API_ENDPOINTS = {
     _BASE_URL: "https://api.coingecko.com/api/v3",
 
+    getCoinsMarketUrl: function(currencyCode){
+        const COINS_MARKET_ENDPOINT = "/coins/markets?vs_currency=" + currencyCode +
+            "&order=market_cap_desc&per_page=100&page=1&sparkline=false" +
+            "&price_change_percentage=1h%2C24h%2C7d%2C14d%2C30d%2C200d%2C1y"
+        return (this._BASE_URL + COINS_MARKET_ENDPOINT)
+    },
+
+    getCoinUrl: function( coinCriteria ){
+        const COIN_ENDPOINT = "/coins/" + coinCriteria.coinId +
+                "?localization=false&tickers=false&market_data=true" +
+                "&community_data=true&developer_data=true&sparkline=false"
+        return (this._BASE_URL + COIN_ENDPOINT)
+    },
+
+    getMarketChartUrl: function( coinCriteria ){
+        const startDate = getPreviousDate( coinCriteria.graphStartDaysAgo )
+        const startUnixTimestamp =  Math.floor(startDate.getTime() / 1000)
+        const endUnixTimestamp = Math.floor(Date.now() / 1000)
+     
+        const MARKET_CHART_ENDPOINT = "/coins/" + coinCriteria.coinId + 
+                                    "/market_chart/range?vs_currency=" +
+                                    coinCriteria.currencyId +
+                                    "&from=" + startUnixTimestamp +
+                                    "&to=" + endUnixTimestamp        
+        return (this._BASE_URL + MARKET_CHART_ENDPOINT)
+    },
+
+    // *** NOT CURRENTLEY USED  ***
+ /*
     getMarketUrl: function(coinId, currencyCode){
         const MARKET_ENDPOINT = "/coins/markets?vs_currency=" + currencyCode + "&ids=" + coinId +
             "&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d"
         return (this._BASE_URL + MARKET_ENDPOINT)
     }, 
-
-    getMarketChartUrl: function( params ){
-        const MARKET_CHART_ENDPOINT = "/coins/" + params.coinId + "/market_chart/range?vs_currency=" +
-                                    params.currencyId + "&from=" + params.startUnixTimestamp +
-                                    "&to=" + params.endUnixTimestamp        
-        return (this._BASE_URL + MARKET_CHART_ENDPOINT)
-    },
 
     getHistoryUrl: function( coinId, numDaysAgo ){
         const startDate = getPreviousDate( numDaysAgo )
@@ -32,13 +54,8 @@ const API_ENDPOINTS = {
                                         startDate.getMonth() + "-" +
                                         startDate.getFullYear() + "&localization=false"
         return (this._BASE_URL + HISTORY_DAYS_AGO_ENDPOINT)
-    },
-
-    getCoinUrl: function( coinId ){
-        const COIN_ENDPOINT = "/coins/" + coinId + "?localization=false&tickers=false" +
-                "&market_data=true&community_data=true&developer_data=true&sparkline=false"
-        return (this._BASE_URL + COIN_ENDPOINT)
     }
+*/
 }
 
 
@@ -97,6 +114,148 @@ function collateArrayCoins(coinDataFromCoingeko) {
 }
 
 
+async function getTheIndexPageData( defaultCurrency )
+{
+    const coinsFromCoingeko = await getCoinsFromCoinGeko(defaultCurrency)
+
+    return collateArrayCoins(coinsFromCoingeko)
+}
+
+
+async function getCoinsFromCoinGeko(defaultCurrency) {
+
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(defaultCurrency)
+
+    // Fetch the coins market data, decode into JSON format
+    const callUrl = await fetch(urlCoinsMarketApi)
+    const response = await callUrl.json()
+    const data = await response
+
+    // The coin data is now available:
+    return data
+}
+
+
+// FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
+
+async function getTheCoinPageData(coinCriteria) {
+
+    // Get the coin data from CoinGeko API
+    const theCoin = await getCoinGekoData(coinCriteria)
+        
+        theCoin.currency_id = coinCriteria.currencyId
+
+        console.log("In getTheCoin(): theCoin = ", theCoin)
+
+        return theCoin
+}
+
+async function getCoinGekoData( coinCriteria ) {
+
+    console.log("Inside getCoinGekoData()")
+
+    // Get API URLs (ready for Coingeko API calls)
+    const urlCoinApi = API_ENDPOINTS.getCoinUrl( coinCriteria )
+    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl( coinCriteria )
+
+    let coin = {}
+
+    // Asynchronous multiple API calls to fetch all the data (for coin page).
+    // Await all the data to be received and decoded, before the data is returned.
+    await Promise.all([fetch(urlCoinApi), fetch(urlMarketChartApi)
+    ]).then(function (responses) {
+
+        // Get a JSON object from each of the two responses (mapping each into an array)
+        return Promise.all(responses.map(function (response) {
+            console.log("In getCoinGekoData(): About to returnresponse.json()")
+            return response.json()
+
+        }))
+    }).then(function (data) {
+        // Collate the relevant subset of required data
+        console.log("In getCoinGekoData(): retreived data=", data )
+        coin = collateCoinGeko(data)
+        console.log("In getCoinGekoData(): coin = ", coin )
+    })
+    .catch(function (error) {
+        console.log("Error in getCoinGekoData():", error)
+    })
+
+    return coin
+}
+
+function collateCoinGeko(data) {
+    // Select relevant data and return this data subset in an object
+    console.log("Inside collateCoinGeko(data): data =", data)
+
+    // Collate all API returned datasets into single object
+    const coinInfo =  { ... selectDataFromCoinApiReturn( data[0] ),
+                        ... prepareGraphDataFromMarketChart( data[1] )
+                      }
+
+    console.log("Inside collateCoinGeko(data):About to return coinInfo object = ", coinInfo)
+
+    return coinInfo
+}
+
+
+
+// FUNCTIONS FOR THE PRICE CHART DATA
+
+function selectDataFromCoinApiReturn( data ){
+// *** TODO: Select the actual object data fields that we want in our object
+// *** And perform any error handling for missing data in any fields
+// *** - e.g. if numeric field contains 'null' may want to replace value with NaN
+    
+    const selectedCoinData = data   // For now, take all the data unproceessed
+
+    return selectedCoinData;
+}
+
+
+
+function prepareGraphDataFromMarketChart ( data ){
+
+    const graphData = {
+        price_graph: {
+            xs: [],
+            ys: []
+        }
+    }
+ 
+    // Obtain x & y data points (of dates & prices)
+    const pricesTable = [data.prices]
+
+    pricesTable[0].forEach(row => {
+        const date = new Date(row[0])
+        graphData.price_graph.xs.push(date.toLocaleDateString())
+        const price = row[1]
+        graphData.price_graph.ys.push(price)
+    })
+    
+    return graphData
+}
+
+
+async function getCoinGraphData(coinCriteria) {
+
+    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(coinCriteria)
+    //    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(chartParams)
+
+    // Fetch the market data, decode into JSON format
+    const callUrl = await fetch(urlMarketChartApi)
+    const response = await callUrl.json()
+    const data = await response;
+
+    // All data is now available:
+    const graphData = prepareGraphDataFromMarketChart( data )
+
+    return graphData
+}
+
+
+
+/*  NO LONGER REQUIRED SINCE LIVE API DATA IS NOW FETCHED IN VIA : getTheIndexPageData()
 function dummyGetCoins() {
     // Function to return hardcoded test data, as an array of coin data objects
     // The returned data is in the format that a Coingeko /coins/markets API call would return.
@@ -388,154 +547,4 @@ function dummyGetCoins() {
 
     return collateArrayCoins(dummyCoinsFromCoingeko)
 }
-
-
-//  TODO: Once required coin dataset confirmed, develop this function to fetch coin data via
-//     CoinGeko API call(s).  Until then use dummyGetCoins() to return small hardcoded coin
-//     dataset whilst developing UI (and hence refining actual data requirements)
-/*
-async function getCoins() {
-// Fetch all the coin data via Coingeko API call and return the subset of relevant data
-
-    // Define and Construct API URLs (for Coingeko API calls )
-    const BASE_URL = "https://api.coingecko.com/api/v3"
-    const COIN_MARKET_DATA_ENDPOINT = "coins/markets?vs_currency=USD&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h%2C%207d%2C%2030d%2C%201y"
-    const urlCoinMarketData = BASE_URL + BITCOIN_MARKET_ENDPOINT
-
-    // Fetch the coin data, decode into JSON format
-    const callUrl = await fetch(urlCoinMarketData)
-    const response = await callUrl.json()
-    const data = await response;
-
-    return selectRelevantCoinInfo( data );
-
-}
 */
-
-
-
-// FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
-
-async function getTheCoin(coinId, currencyCode) {
-
-    // Get the coin data from CoinGeko API
-    const theCoin = await getCoinGekoData(coinId, currencyCode)
-        
-        console.log("In getTheCoin(): theCoin = ", theCoin)
-
-        return theCoin
-}
-
-
-async function getCoinGekoData(coinId, currencyCode) {
-
-    console.log("Inside getCoinGekoData()")
-
-    // Get API URLs (ready for Coingeko API calls)
-    const urlCoinApi = API_ENDPOINTS.getCoinUrl(coinId, currencyCode)
-
-    // *** TODO: REVIEW/REFACTOR chartParams hardwiring AND Where & How this data is obtained
-    // *** Note: UI's datePicker is set to default date elsewhere 
-    const startDate = getPreviousDate( 365 )    // initial chart over 1 year (365 days)
-    const chartParams = {
-           coinId: "bitcoin",
-           currencyId: "usd",
-           startUnixTimestamp: Math.floor(startDate.getTime() / 1000),
-           endUnixTimestamp: Math.floor(Date.now() / 1000)
-    }
-    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(chartParams)
-
-    let theCoin = {}
-
-    // Asynchronous multiple API calls to fetch all the data (for coin page).
-    // Await all the data to be received and decoded, before the data is returned.
-    await Promise.all([fetch(urlCoinApi), fetch(urlMarketChartApi)
-    ]).then(function (responses) {
-
-        // Get a JSON object from each of the two responses (mapping each into an array)
-        return Promise.all(responses.map(function (response) {
-            console.log("In getCoinGekoData(): About to returnresponse.json()")
-            return response.json()
-
-        }))
-    }).then(function (data) {
-        // Collate the relevant subset of required data
-        console.log("In getCoinGekoData(): retreived data=", data )
-        theCoin = collateCoinGeko(data)
-        console.log("In getCoinGekoData(): theCoin = ", theCoin )
-    })
-    .catch(function (error) {
-        console.log("Error in getCoinGekoData():", error)
-    })
-
-    return theCoin
-}
-
-function collateCoinGeko(data) {
-    // Select relevant data and return this data subset in an object
-    console.log("Inside collateCoinGeko(data): data =", data)
-
-    // Collate all API returned datasets into single object
-    const coinInfo =  { ... selectDataFromCoinApiReturn( data[0] ),
-                        ... prepareGraphDataFromMarketChart( data[1] )
-                      }
-
-    console.log("Inside collateCoinGeko(data):About to return coinInfo object = ", coinInfo)
-
-    return coinInfo
-}
-
-
-
-// FUNCTIONS FOR THE PRICE CHART DATA
-
-function selectDataFromCoinApiReturn( data ){
-// *** TODO: Select the actual object data fields that we want in our object
-// *** And perform any error handling for missing data in any fields
-// *** - e.g. if numeric field contains 'null' may want to replace value with NaN
-    
-    const selectedCoinData = data   // For now, take all the data unproceessed
-
-    return selectedCoinData;
-}
-
-
-
-function prepareGraphDataFromMarketChart ( data ){
-
-    const graphData = {
-        priceGraph: {
-            xs: [],
-            ys: []
-        }
-    }
- 
-    // Prepare x & y data points (of dates & prices)
-    const pricesTable = [data.prices]
-
-    pricesTable[0].forEach(row => {
-        const date = new Date(row[0])
-        graphData.priceGraph.xs.push(date.toLocaleDateString())
-        const price = row[1]
-        graphData.priceGraph.ys.push(price)
-    })
-    
-    return graphData
-}
-
-
-
-async function getCoinGraphData(chartParams) {
-
-    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(chartParams)
-
-    // Fetch the market data, decode into JSON format
-    const callUrl = await fetch(urlMarketChartApi)
-    const response = await callUrl.json()
-    const data = await response;
-
-    // All data is now available:
-    const graphData = prepareGraphDataFromMarketChart( data )
-
-    return graphData
-}

@@ -3,6 +3,8 @@
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
 const currency2DP = newCurrencyFormater("USD", 2)
 const currency0DP = newCurrencyFormater("USD", 0)
+const btc8DP = newCurrencyFormater("BTC", 8)
+const btc6DP = newCurrencyFormater("BTC", 6)
 
 function newCurrencyFormater(currencyType, decimalPlaces) {
     const formatter = new Intl.NumberFormat("en-US",
@@ -108,7 +110,7 @@ function createCompareFunctionBody(object, attribute, sortOrder) {
 }
 
 
-function getPreviousDate( numDaysAgo ){
+function getPreviousDate(numDaysAgo) {
 
     const currentDateTime = new Date()
     const previousDate = new Date()
@@ -117,5 +119,41 @@ function getPreviousDate( numDaysAgo ){
     return previousDate
 
 }
+
+function getDaysAgo(prevoiusDate) {
+
+    const currentDateTime = new Date()
+    const diffInMilliseconds = currentDateTime.getTime() - prevoiusDate.getTime()
+    const numDaysAgo = diffInMilliseconds / (1000 * 3600 * 24) 
+
+    return numDaysAgo
+}
+
+
+function getParamFromUrl(url, paramId) {
+
+    const startParamIdPos = url.lastIndexOf(paramId)
+    if (startParamIdPos == -1) {
+        throw new Error(`Parameter: "${paramId}" not present in url: "${url}"`)
+    }
+    const startParamValPos = startParamIdPos + paramId.length
+
+    const endDelimPos = url.indexOf("&", startParamValPos)
+    const endParamValPos = (endDelimPos > -1)? endDelimPos: url.length 
+
+    const param = url.substring( startParamValPos, endParamValPos )
+    
+    return param
+}
+
+function getCurrencySymbol( currencyId ){
+    let num = 0
+    const symbol = num.toLocaleString("en",
+                            {style: "currency",
+                            currency: currencyId.toUpperCase()}).replace(/\d+([,.]\d+)?/g, "")
+    return symbol
+}
+
+
 
 

@@ -17,10 +17,6 @@
   <!-- Font Awesome -->
   <script src="https://kit.fontawesome.com/e0c2649351.js" crossorigin="anonymous"></script>
 
-<!-- TODO: Posible top left icon for site (click links back to homepage)
-  <i class="fas fa-coins"></i>
--->
-
   <!-- Include applications css styles -->
   <link rel="stylesheet" href="styles.css">
 
@@ -29,28 +25,31 @@
 <body>
 
   <div class="container bg-white">
-    <!-- Top row for Heading text  -->
-    <div class="row">
-      <div class="col-sm-12" align="center">
-        <h1>Cryptocurrency Prices</h1>
-        <h2>Coins ranked by Market Capitilisation</h2>
-        <br>
-      </div>
-    </div>
 
-    <!-- Second row for Coin Search bar -->
-    <div class="row">
-      <div class="col-sm-6"></div>
-      <div class="col-sm-6" align="right">
-        <div id="searchControl">
-          <label for="myCoinSearchInput">Search: </label>
-          <input id="myCoinSearchInput" type="text" placeholder="Coin name or id"></input>
-        </div>
-      </div>
-    </div>
+    <!-- Header section; with logo and search bar  -->
+    <!-- *** Common with coin page, with slight exception of sub-haeader    *** 
+        **** TODO: Consider refactoring to not repeat HTML in coin.html ??? **** -->
     <br>
+    <div class="row">
+        <div class="col-sm-1" align="left">
+            <h1><i class="fas fa-chart-line"></i></h1>
+        </div>
+        <div class="col-sm-8" align="left">
+            <h1>Cryptocurrency Coin Prices</h1>
+            <h3>(ranked by Market Capitilisation)</h3>
+        </div>
 
-    <!-- Third row for page controls  -->
+        <div class="col-sm-3" align="right">
+            <div id="searchControl">
+                <br>
+                <label for="myCoinSearchInput">Search</label>
+                <input id="myCoinSearchInput" type="text" placeholder="Coin name or id"></input>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <!-- Second row for page controls  -->
     <div class="row">
 
       <!-- Left-side for nav tabs  -->
@@ -135,8 +134,7 @@
 
     <!-- Page Footer-->
     <div class="row">
-      <div id="myPageFooter" , class="col-sm-12" align="center">
-      </div>
+      <div id="myPageFooter" , class="col-sm-12" align="center"></div>
     </div>
 
   </div>

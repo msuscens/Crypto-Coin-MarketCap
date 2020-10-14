@@ -27,10 +27,10 @@
         <br>
         <div class="row">
             <div class="col-sm-1" align="left">
-                <h2><i class="fas fa-coins"></i></h2>
+                <h1><i class="fas fa-chart-line"></i></h1>
             </div>
             <div class="col-sm-8" align="left">
-                <h1>Cryptocurrency Prices</h1>
+                <h1>Cryptocurrency Coin Prices</h1>
             </div>
 
             <div class="col-sm-3" align="right">
@@ -40,7 +40,6 @@
                 </div>
             </div>
         </div>
-
         <hr>
 
         <div class="row">
@@ -50,13 +49,13 @@
                 <p><span id="coinIconNameSymbol">Coin Icon, Name (symbol)</span></p>
             </div>
 
-            <div class="col-sm-4" align="left">
-                <span id="priceLine">PRICE (currency) [% chg 24hrs]</span>
+            <div class="col-sm-5" align="left">
+                <span id="priceLine">PRICE (currency)</span>
                 <br>
-                <span id="priceInBtcLine">BTC PRICE [% change vs BTC]</span>
+                <span id="priceInBtcLine">BTC PRICE</span>
             </div>
 
-            <div class="col-sm-2" align="right">
+            <div class="col-sm-1" align="right">
                 <p>Rank: <span id="mcRank">UNKNOWN</span></p>
             </div>
         </div>
@@ -83,61 +82,88 @@
             <div class="col-sm-12">
                 <div class="table-responsive">
                     <table class="table">
+                        
                         <thead>
                             <tr>
+                                <th>Price Change Statistics:</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="coinPriceChangeStatsTableBody">
+                            <tr>
+                                <td>1hr: <span id="price1hr"></span></td>
+                                <td>7d: <span id="price7d"></span></td>
+                                <td>30d: <span id="price30d"></span></td>
+                                <td>200d: <span id="price200d"></span></td>
+                            </tr>
+                            <tr>
+                                <td>24hr: <span id="price24hr"></span></td>
+                                <td>14d: <span id="price14d"></span></td>
+                                <td>60d: <span id="price60d"></span></td>
+                                <td>1year: <span id="price1y"></span></td>
+                            </tr>
+                            <tr>
+                                <td><span id="price24hrLowHigh"></span></td>
+                                <td><span id="priceATL"></span></td>
+                                <td><span id="priceATH"></span></td>
+                                <td><span id="priceSentiment"></span></td>
+                            </tr>
+                        </tbody>
+
+                        <thead>
+                            <tr>
+                                <th>Market Statistics:</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            <tr>
                                 <th>Market Cap</th>
-                                <th>Volume (24hrs)</th>
+                                <th>Total Volume (24hrs)</th>
                                 <th>Circulating Supply</th>
                                 <th>Max Supply</th>
                             </tr>
                         </thead>
-                        <tbody id="coinFirstTableBody">
+                        <tbody id="marketStatsTableBody">
                             <tr>
-                                <td>$199,118,239,120 USD</td>
-                                <td>$58,712,323,737 USD</td>
-                                <td>18,502,725 BTC</td>
-                                <td>21,000,000 BTC</td>
+                                <td><span id="marketCap"></span></td>
+                                <td><span id="totalVolume"></span></td>
+                                <td><span id="circulatingSupply"></td>
+                                <td><span id="totalSupply"></span></td>
                             </tr>
                             <tr>
-                                <td>18,502,725 BTC</td>
-                                <td>5,455,743 BTC</td>
-
+                                <td><span id="marketCapInBtc"></td>
+                                <td><span id="totalVolumeInBtc"></span></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                         </tbody>
+                    </table>
+
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th>Additional Stats:</th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
+                                <th>Coin Description:</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="coinDescriptionTableBody">
                             <tr>
-                                <td>Info 1: 123456</td>
-                                <td>Info 2: 123456</td>
-                                <td>Info 3: 123456</td>
-                                <td>Info 4: 123456</td>
-                            </tr>
-                            <tr>
-                                <td>Info 5: 123456</td>
-                                <td>Info 6: 123456</td>
-                                <td>Info 7: 123456</td>
-                                <td>Info 8: 123456</td>
-                            </tr>
-                            <tr>
-                                <td>Info 9: 123456</td>
-                                <td>Info 10: 123456</td>
-                                <td>Info 11: 123456</td>
-                                <td>Info 12: 123456</td>
+                                <td><span id="coinDescription"></span></td>
                             </tr>
                         </tbody>
-
-
                     </table>
+
                 </div>
             </div>
         </div>
+
+        <!-- Page Footer-->
+        <div class="row">
+            <div id="coinPageFooter" , class="col-sm-12" align="center"></div>
+        </div>
+
     </div>
 </body>
 

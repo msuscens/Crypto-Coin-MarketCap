@@ -6,29 +6,35 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-// Obtain the Coin Data
-const coinObjects = dummyGetCoins()
-console.log("coinObjects = ", coinObjects)
+// Global
+const defaultCurrency = "usd"
+let theCoins = []   // Array of coin data (yet to be obtained)
 
-// Above is currently using dummy coin data.
-// TODO: Replace dummyGetCoins() with function that obtains data via coinGeko API calls:
-//              const defaultCurrency = "USD"
-//              let coinObjectList = getCoins( defaultCurrency )
+try {
+    ;(async () => {
+        // Obtain the coin data
+        console.log("In indexLogic.js: annonoymous async(): theCoins = ", theCoins)
+        theCoins = await getTheIndexPageData( defaultCurrency )
+    
+        console.log("Returned from getTheIndexPageData: theCoins = ", theCoins)
+    
+        // Display the coin data on the webpage
+        $("document").ready(function () {
 
-
-
-$("document").ready(function () {
-
-    // Display the coin data on the webpage
-    populateCoinTable(coinObjects)
-    populatePageFooter(coinObjects)
-
-})
+            populateCoinTable( theCoins )
+            populatePageFooter( theCoins )
+            
+        })
+    })() 
+} catch (error) {
+    console.log("IndexLogic.js: Something went wrong: " + error)
+}
 
 
 // FUNCTIONS
 
-function populateCoinTable(myCoins) {  // Fill the table with coin data
+function populateCoinTable(myCoins) { 
+// Fill the table with coin data
     
     const htmlCoinTableID = $("#myCoinTableBody")
     htmlCoinTableID.html("")
@@ -45,11 +51,11 @@ function populateCoinTable(myCoins) {  // Fill the table with coin data
 
 
 function constructTableRowHtml(coin) {
-    // Create and return the HTML string for a coin's table row (using the given coin data)
+// Create and return the HTML string for a coin's table row (using the given coin data)
 
     const coinNameLine = `<img src="${coin.image}"border=3 height=25 width=25> ${coin.name} (${coin.symbol})`
 
-    const coinRowHtml = `<tr onclick="displayCoinPage(event)"> 
+    const coinRowHtml = `<tr onclick="displayCoinPage(event)" coinid="${coin.id}"> 
                             <td>${coin.market_cap_rank}</td>
                             <td>${coinNameLine}</td>
                             <td>${currency2DP.format(coin.current_price)}</td>
@@ -81,7 +87,7 @@ function constructTableRowHtml(coin) {
 
 
 function populatePageFooter(myCoins) {
-    // Update the HTML string of the table footer with latest coin data provided.
+// Update the HTML string of the table footer with latest coin data provided.
 
     const htmlFooterID = $("#myPageFooter")
     htmlFooterID.html("")
@@ -105,7 +111,7 @@ function sortTableRows(event) {
 
     if ((currentSortOrder == "descending") || (currentSortOrder == "ascending")) {
         // Previously sorted on this column, so simply reverse data order
-        coinObjects.reverse()
+        theCoins.reverse()
         newSortOrder = (currentSortOrder === "ascending") ? "descending" : "ascending"
     }
     else {  // Not previously sorted
@@ -113,16 +119,16 @@ function sortTableRows(event) {
 
         // Prepare a compare function for the coin attribute
         const coinAttribute = getCoinObjectAttribute(event.target.id)
-        const functionBody = createCompareFunctionBody(coinObjects[0], coinAttribute, newSortOrder)
+        const functionBody = createCompareFunctionBody(theCoins[0], coinAttribute, newSortOrder)
         const compareFunction = Function("a, b", functionBody)
 
         // Sort the coin data (array of coin objects)
-        coinObjects.sort(compareFunction)
+        theCoins.sort(compareFunction)
     }
 
     // Update the table with newly sorted coin data
     setColumnHeadersSortOrder(event, newSortOrder)
-    populateCoinTable(coinObjects)
+    populateCoinTable(theCoins)
 }
 
 
@@ -143,16 +149,33 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
 
 }
 
-
+// Event Handler for when user clicks a row of the coin table
 function displayCoinPage(event){
 
- //   console.log("$(event.target).val() = ", $(event.target).val() )
- //   console.log("$(event.target.id) = ",  $(event.target.id) )
+    try {
+        console.log("In eh displayCoinPage(event): event = ", event)
 
- // *** TODO - Use ?param on the url to pass coinid and currencyid to the coin window
- // *** Alternatively use local storage: 
- //        https://stackoverflow.com/questions/12226564/jquery-passing-data-between-pages
+        // TODO - BETTER WAY TO GET coinID 
 
-    window.location.href = "coin.html"
+        // Works for console: event.target.parentNode.attributes.coinid.nodeValue
+        //const coinID = $(event.target.parentNode).prop("coinid")
+        // const coinID = $(event.target.parentNode.attributes).prop("coinid")
+        // const coinID1 = $(event.target).parent().prop("coinid")
+        // const coinID2 = $(event.target.parentNode).prop("coinid")
+        //   const coinID3 = $(event.target.parentNode).getAttribute("coinid")
+        const coinID = event.target.parentNode.attributes.coinid.nodeValue
+
+        // TODO - Get currencyid from Currency button (dropdown) value
+        const currencyID = "usd"  
+
+
+        console.log("coinID = ", coinID)
+        console.log("currencyID = ", currencyID) 
+
+        window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
+ 
+    } catch (error) {
+        console.log("Something went wrong in IndexLogic: DisplayCoinPage(event): " + error)
+    }
 
 }
