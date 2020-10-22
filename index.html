@@ -69,18 +69,9 @@
         <div align="right">
           <div class="btn-group">
 
-            <button class="btn btn-light mr-4"><i class="fas fa-sync-alt"></i> Sync</button>
+            <button class="btn btn-light mr-4" onclick="reloadCoinData()"><i class="fas fa-sync-alt"></i> Sync</button>
 
-            <div class="dropdown">
-              <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">Currency</button>
-              <div class="dropdown-menu">
-                <a class="dropdown-item" href="#">USD</a>
-                <a class="dropdown-item" href="#">EUR</a>
-                <a class="dropdown-item" href="#">GBP</a>
-                <a class="dropdown-item" href="#">BTC</a>
-                <a class="dropdown-item" href="#">ETH</a>
-              </div>
-            </div>
+            <div id="currencySelectorComponent"></div>
 
             <button class="btn btn-light ml-4">Next 100-></button>
             <button class="btn btn-light">View All</button>
@@ -143,6 +134,7 @@
 
 <footer>
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
     integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
     crossorigin="anonymous"></script>
@@ -155,6 +147,7 @@
 
   <script src="helpers.js"></script>
   <script src="interfaceAPI.js"></script>
+  <script src="components.js"></script>
   <script src="indexLogic.js"></script>
 
 </footer>

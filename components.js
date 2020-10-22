@@ -13,6 +13,56 @@
 
 // COMPONENTS
 
+// Currency Selector dropdown component
+
+function createCurrencySelectorDropDownHtml ( currencies, selectedCurrency ){
+
+  let htmlCurrencySelector = `<div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">
+                                  <span id="currencyLabelCS">${selectedCurrency.toUpperCase()}</span>
+                                </button>
+                                <div class="dropdown-menu">`
+
+  $.each(currencies, function (index, currencyId) {
+    const currencyDropDownItemHTML = `<a class="dropdown-item" href="#"
+                                    onclick="changeCurrency(event)">${currencyId.toUpperCase()}</a>`
+    htmlCurrencySelector += currencyDropDownItemHTML
+
+  })
+  htmlCurrencySelector += `</div></div>`
+
+  return htmlCurrencySelector
+}
+/*
+function changeCurrency(event){
+
+  try {
+    // Set the currency selector to the new currency
+    const currencyId = $(event.target).text()
+    $("#currencyLabelCS").text( currencyId )
+
+    // Update the currency formatters to new currency
+    currency2DP = newCurrencyFormater(currencyId, 2)
+    currency0DP = newCurrencyFormater(currencyId, 0)
+
+    // Obtain the coin data
+    getTheIndexPageData( currencyId )
+    .then (
+        (coinData) => {
+            theCoins = coinData
+            // Display the coin data on the webpage
+            populateCoinTable( theCoins )
+            populatePageFooter( theCoins )
+          }  
+    )
+  } catch (error) {
+        console.log("CurrencySelector component, in changeCurrency() EH: Something went wrong: " + error)
+  }
+}
+*/
+
+// Coin search bar component
+
 function coinSearchBarHtml(availableCoins, mostPopularCoinSearches) {
     
     let title = "Search"

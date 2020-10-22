@@ -1,10 +1,12 @@
 // HELPER FUNCTIONS
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
+/*
 const currency2DP = newCurrencyFormater("USD", 2)
 const currency0DP = newCurrencyFormater("USD", 0)
-const btc8DP = newCurrencyFormater("BTC", 8)
-const btc6DP = newCurrencyFormater("BTC", 6)
+*/
+//const btc8DP = newCurrencyFormater("BTC", 8)
+//const btc6DP = newCurrencyFormater("BTC", 6)
 
 function newCurrencyFormater(currencyType, decimalPlaces) {
     const formatter = new Intl.NumberFormat("en-US",
@@ -154,6 +156,14 @@ function getCurrencySymbol( currencyId ){
     return symbol
 }
 
+/*  DELETE - Instead use Number.isFinite( testVal )
+function isRealNumber( testVal ){
 
-
-
+  if ((typeof testVal !== 'number') ||    
+      (Number(testVal).isNaN() ) ||       
+      ((testVal === Infinity || testVal === !Infinity)) ){
+          return false
+      }
+}
+*/
+//

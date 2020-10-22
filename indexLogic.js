@@ -6,26 +6,31 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-// Global
+// Global - data for the page
 const defaultCurrency = "usd"
 let theCoins = []   // Array of coin data (yet to be obtained)
 
-try {
-    ;(async () => {
-        // Obtain the coin data
-        console.log("In indexLogic.js: annonoymous async(): theCoins = ", theCoins)
-        theCoins = await getTheIndexPageData( defaultCurrency )
-    
-        console.log("Returned from getTheIndexPageData: theCoins = ", theCoins)
-    
-        // Display the coin data on the webpage
-        $("document").ready(function () {
+// Initialise the currency formatter functions (for 0 & 2 decimail places)
+let currency2DP = newCurrencyFormater(defaultCurrency, 2)
+let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
+try {
+    // Obtain the coin data
+    getTheIndexPageData( defaultCurrency )
+    .then (
+        (coinData) => {
+            theCoins = coinData
+            
+            // Display the coin data on the webpage
             populateCoinTable( theCoins )
             populatePageFooter( theCoins )
-            
-        })
-    })() 
+
+            // Put the currency selector component onto the page
+            const currencies = getSupportedCurrencies() //TODO: Replace by getting data via getTheIndexPageData()
+            const componentHtml = createCurrencySelectorDropDownHtml(currencies, defaultCurrency)
+            $("#currencySelectorComponent").html(componentHtml)
+        }  
+    )
 } catch (error) {
     console.log("IndexLogic.js: Something went wrong: " + error)
 }
@@ -33,16 +38,16 @@ try {
 
 // FUNCTIONS
 
-function populateCoinTable(myCoins) { 
+function populateCoinTable(coins) { 
 // Fill the table with coin data
     
     const htmlCoinTableID = $("#myCoinTableBody")
     htmlCoinTableID.html("")
 
-    $.each(myCoins, function (index, coin) {
+    $.each(coins, function (index, coin) {
         const coinTableRowHTML = constructTableRowHtml(coin)
 
-        // Replace any 'NaN' numbers (so that instead '-' character will be displayed)                  
+        // Replace any 'NaN' numbers, so that '-' character will be displayed instead)                  
         const coinRowHtmlwithNaNsReplaced = coinTableRowHTML.replace(/NaN/g, "-")
 
         htmlCoinTableID.append(coinRowHtmlwithNaNsReplaced)
@@ -86,14 +91,14 @@ function constructTableRowHtml(coin) {
 }
 
 
-function populatePageFooter(myCoins) {
+function populatePageFooter(coins) {
 // Update the HTML string of the table footer with latest coin data provided.
 
     const htmlFooterID = $("#myPageFooter")
     htmlFooterID.html("")
 
-    const totalMarketCap = sumMarketCap(myCoins)
-    const lastUpdated = myCoins[0].last_updated
+    const totalMarketCap = sumMarketCap(coins)
+    const lastUpdated = coins[0].last_updated   // take from first coin in the list
 
     const footerHtml = `<p><strong>Total Market Cap: ${currency0DP.format(totalMarketCap)}</strong></p>
                         <p>Last updated: ${lastUpdated}</p>`
@@ -149,28 +154,36 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
 
 }
 
+// Event Handler for when user clicks "Sync" button
+function reloadCoinData() {
+
+    try {
+        const currencyId = $("#currencyLabelCS").text()
+
+        // Obtain the coin data
+        getTheIndexPageData(currencyId)
+        .then (
+            (coinData) => {
+                theCoins = coinData
+                
+                // Display the coin data on the webpage
+                populateCoinTable(theCoins)
+                populatePageFooter(theCoins)
+            }  
+        )
+
+    } catch (error) {
+        console.log("In reloadCoinData() EH: Something went wrong: " + error)
+    }
+}
+
+
 // Event Handler for when user clicks a row of the coin table
 function displayCoinPage(event){
 
     try {
-        console.log("In eh displayCoinPage(event): event = ", event)
-
-        // TODO - BETTER WAY TO GET coinID 
-
-        // Works for console: event.target.parentNode.attributes.coinid.nodeValue
-        //const coinID = $(event.target.parentNode).prop("coinid")
-        // const coinID = $(event.target.parentNode.attributes).prop("coinid")
-        // const coinID1 = $(event.target).parent().prop("coinid")
-        // const coinID2 = $(event.target.parentNode).prop("coinid")
-        //   const coinID3 = $(event.target.parentNode).getAttribute("coinid")
         const coinID = event.target.parentNode.attributes.coinid.nodeValue
-
-        // TODO - Get currencyid from Currency button (dropdown) value
-        const currencyID = "usd"  
-
-
-        console.log("coinID = ", coinID)
-        console.log("currencyID = ", currencyID) 
+        const currencyID = $("#currencyLabelCS").text().toLowerCase()  
 
         window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
  
@@ -179,3 +192,32 @@ function displayCoinPage(event){
     }
 
 }
+
+// Event Handler for when user clicks on a currency (in currency selector)
+function changeCurrency(event){
+    try {
+      console.log("In indexLogic.js: EH changeCurrency()")
+
+      // Set the currency selector to the new currency
+      const currencyId = $(event.target).text()
+      $("#currencyLabelCS").text( currencyId )
+  
+      // Update the currency formatters to new currency
+      currency2DP = newCurrencyFormater(currencyId, 2)
+      currency0DP = newCurrencyFormater(currencyId, 0)
+  
+      // Obtain the coin data
+      getTheIndexPageData( currencyId )
+      .then (
+          (coinData) => {
+              theCoins = coinData
+              // Display the coin data on the webpage
+              populateCoinTable( theCoins )
+              populatePageFooter( theCoins )
+            }  
+      )
+    } catch (error) {
+          console.log("CurrencySelector component, in changeCurrency() EH: Something went wrong: " + error)
+    }
+  }
+
