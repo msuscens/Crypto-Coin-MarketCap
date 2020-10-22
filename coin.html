@@ -43,23 +43,21 @@
         <hr>
 
         <div class="row">
-            <div class="col-sm-1" align="left">
-                <p>Rank: <span id="mcRank">UNKNOWN</span></p>
+            <div class="col-sm-1">
             </div>
             <div class="col-sm-5" align="left">
                 <p><span id="coinIconNameSymbol">Coin Icon, Name (symbol)</span></p>
             </div>
 
-            <div class="col-sm-4" align="left">
+            <div class="col-sm-5" align="left">
                 <span id="priceLine">PRICE (currency)</span>
                 <br>
                 <span id="priceInBtcLine">BTC PRICE</span>
             </div>
 
-            <div class="col-sm-2" align="right">
-                <div id="currencySelectorComponent2"></div>
+            <div class="col-sm-1" align="right">
+                <p>Rank: <span id="mcRank">UNKNOWN</span></p>
             </div>
-
         </div>
 
 
@@ -133,7 +131,7 @@
                                 <td><span id="marketCap"></span></td>
                                 <td><span id="totalVolume"></span></td>
                                 <td><span id="circulatingSupply"></td>
-                                <td><span id="maxSupply"></span></td>
+                                <td><span id="totalSupply"></span></td>
                             </tr>
                             <tr>
                                 <td><span id="marketCapInBtc"></td>
@@ -180,8 +178,10 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!--
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
       integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
       crossorigin="anonymous"></script>
@@ -191,10 +191,10 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
       integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
       crossorigin="anonymous"></script>
+  -->
 
     <script src="helpers.js"></script>
     <script src="interfaceAPI.js"></script>
-    <script src="components.js"></script>
     <script src="coinLogic.js"></script>
 
 </footer>
