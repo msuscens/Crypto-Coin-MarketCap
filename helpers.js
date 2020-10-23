@@ -1,11 +1,7 @@
 // HELPER FUNCTIONS
 
-// Initialise the currency formatter functions (for 0 & 2 decimail places)
-const currency2DP = newCurrencyFormater("USD", 2)
-const currency0DP = newCurrencyFormater("USD", 0)
-const btc8DP = newCurrencyFormater("BTC", 8)
-const btc6DP = newCurrencyFormater("BTC", 6)
-
+// Use to initialise a currency formatter function,
+// E.g. const currency2DP = newCurrencyFormater("USD", 2)
 function newCurrencyFormater(currencyType, decimalPlaces) {
     const formatter = new Intl.NumberFormat("en-US",
         {
@@ -155,5 +151,39 @@ function getCurrencySymbol( currencyId ){
 }
 
 
+// Cookie Helper functions - courtesy of Kenneth
+// Not used yet - for information (learning)) and possible future use.
 
+function setCookie(cname, cvalue, seconds) {
+    var d = new Date();
+    d.setTime(d.getTime() + (seconds * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function checkCookie(cname) {
+    var user = getCookie(cname);
+    if (user != "") {
+        return true;
+    } else {
+        if (user == "" && user == null) {
+            return false;
+        }
+    }
+}
 

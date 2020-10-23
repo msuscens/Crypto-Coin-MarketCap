@@ -13,6 +13,30 @@
 
 // COMPONENTS
 
+// Currency Selector dropdown component
+
+function createCurrencySelectorDropDownHtml ( currencies, selectedCurrency, onclickFunctionCall ){
+
+  let htmlCurrencySelector = `<div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">
+                                  <span id="currencyLabelCS">${selectedCurrency.toUpperCase()}</span>
+                                </button>
+                                <div class="dropdown-menu">`
+
+  $.each(currencies, function (index, currencyId) {
+    const currencyDropDownItemHTML = `<a class="dropdown-item" href="#"
+                                    onclick="${onclickFunctionCall}">${currencyId.toUpperCase()}</a>`
+    htmlCurrencySelector += currencyDropDownItemHTML
+
+  })
+  htmlCurrencySelector += `</div></div>`
+
+  return htmlCurrencySelector
+}
+
+
+// Coin search bar component
+
 function coinSearchBarHtml(availableCoins, mostPopularCoinSearches) {
     
     let title = "Search"

@@ -6,17 +6,51 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-// Global to the coin page
-let theCoinPageData = {}            // No coin page data obtained as yet
+
+// Coin page metadata
 const graphStartDaysAgo = 365       // Default for inital page load
-
-
-// Metadata for the required Coin page data
-const pageUrl = window.location.href
 const coinCriteria = {
-    coinId:  getParamFromUrl( pageUrl, "?coinid="),
-    currencyId: getParamFromUrl( pageUrl, "&currencyid="),
+    coinId:  getParamFromUrl( window.location.href, "?coinid="),
+    currencyId: getParamFromUrl( window.location.href, "&currencyid="),
     graphStartDaysAgo: graphStartDaysAgo }
+
+// Data for the coin page
+let theCoinPageData = {}            // No coin page data obtained as yet
+
+// Initialise the currency formatter functions (for 0 & 2 decimail places)
+let currency2DP = newCurrencyFormater(coinCriteria.currencyId, 2)
+let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
+
+ try {
+    // Obtain the coin data
+    getTheCoinPageData( coinCriteria )
+    .then (
+        (coinData) => {
+            theCoinPageData = coinData
+
+            console.log("Returned from getCoinPageData: theCoinPageData = ", theCoinPageData)
+
+        // Display the data on the coin page, section by section        
+            displayCoinHeader( theCoinPageData )
+
+            const priceGraphCriteria = getPriceGraphCriteria( theCoinPageData )
+            displayGraph( priceGraphCriteria )
+
+            displayPriceStats( theCoinPageData )
+            displayMarketStats( theCoinPageData )
+            displayDescription( theCoinPageData )
+            displayFooter( theCoinPageData )
+
+            // Put the currency selector component onto the page (with all supported currencies)
+            const componentHtml = createCurrencySelectorDropDownHtml(
+                                    theCoinPageData.market_data.currencies_supported,
+                                    theCoinPageData.currency_id, "changeCurrencyOnCoinPage(event)")
+            $("#currencySelectorComponent2").html(componentHtml)
+        }  
+    )
+} catch (error) {
+    console.log("Something went wrong: " + error)
+}
 
 
 // Initialise date picker (for coin price graph's start date)
@@ -29,73 +63,22 @@ $(function () {
     $("#myDatepicker").datepicker("setDate", `-${graphStartDaysAgo}d`)
 })
 
- try {
-/* THIS ALSO WORKS - INSTEAD OF ASYNC ANNONYMOS FUNCTION BELOW - BUT IS IT BETTER/CLEARER??
-    $("document").ready( function () {
-        console.log("Inside  : $(\"document\").ready(function ()")
-
-        populateCoinPage(coinCriteria)
-
-    })
-*/
-    ;(async () => {
-        // Obtain all the coin data for the page
-        console.log("In coinLogic.js: annonoymous async(): theCoinPageData = ", theCoinPageData)
-        theCoinPageData = await getTheCoinPageData( coinCriteria )
-
-        console.log("Returned from getCoinPageData: theCoinPageData = ", theCoinPageData)
-
-        // Display the data on the coin page, section by section        
-        $("document").ready( function () {
-            displayCoinHeader( theCoinPageData )
-            const priceGraph = getPriceGraph( theCoinPageData )
-            displayGraph( priceGraph )
-
-            displayPriceStats( theCoinPageData )
-            displayMarketStats( theCoinPageData )
-            displayDescription( theCoinPageData )
-
-            displayFooter( theCoinPageData )
-        })
-    })()
-
-} catch (error) {
-    console.log("Something went wrong: " + error)
-}
-
-/*  FOR ABOVE ALTERNATIVE APPROACH
-
-async function populateCoinPage(coinCriteria) {
-    try {
-        // Obtain all the coin data for the page
-        const theCoinPageData = await getTheCoinPageData(coinCriteria)
-
-        // Display the data on the Coin page        
-        displayBody(theCoinPageData)
-        const priceGraph = getPriceGraph(theCoinPageData)
-        drawGraph( priceGraph )
-    }
-    catch (error) {
-        console.log("Error catch in displayCoinOnPage():", error)
-    }
-}
-*/
-
 
 function displayCoinHeader(coin) {
 
     // Display the basic coin data
-    const coinNameLine = `<img src="${coin.image.large}"border=3 height=50 width=50>` +
-                        `<big><strong> &nbsp ${coin.name}</strong></big> (${coin.symbol.toUpperCase()})`
-    const coinPriceLine = `<strong>${currency2DP.format(coin.market_data.current_price.usd)}</strong>` +
-                        ` (${coin.currency_id.toUpperCase()})`
-    const coinBtcPriceLine = `<span>&#x20bf</span>${coin.market_data.current_price.btc.toFixed(8)}(BTC)`
+    const coinNameLine = `<img src="${coin.image.large}" border=3 height=50 width=50>
+                            <big><strong> &nbsp ${coin.name}</strong></big> (${coin.symbol.toUpperCase()})`
+    const coinPriceLine = `<strong>${currency2DP.format(coin.market_data.current_price[coin.currency_id])} </strong>
+                            (${coin.currency_id.toUpperCase()})`
+    const coinBtcPriceLine = `<span>&#x20bf</span>${coin.market_data.current_price.btc.toFixed(8)} (BTC)`
 
     $("#coinIconNameSymbol").html(coinNameLine)
     $("#mcRank").html(coin.market_cap_rank)
     $("#priceLine").html(coinPriceLine)
     $("#priceInBtcLine").html(coinBtcPriceLine)
 }
+
 
 function displayPriceStats(coin) {
 
@@ -126,74 +109,59 @@ function displayPriceStats(coin) {
     $("#priceSentiment").html( priceSentimentlLine )
 }
 
+
 function getPriceChangeHtml( coin, baseAttribute )
 {
-    const currencyValueAttribute = `${baseAttribute}.${coin.currency_id}`
-    const percentageChangeInCurrency = eval(currencyValueAttribute)
-    const btcValueAttribute = `${baseAttribute}.btc`
-    const percentageChangeInBtc = eval(btcValueAttribute)
+    const percentageChangeInCurrency = eval(`${baseAttribute}.${coin.currency_id}`)
+    const percentageChangeInBtc = eval(`${baseAttribute}.btc`)
 
     const cssStyleChangeVsCurrency = cssColorForNumber(percentageChangeInCurrency)
     const cssStyleChangeVsBtc = cssColorForNumber(percentageChangeInBtc)
 
     const priceChangeHtml =
-        `<span style="${cssStyleChangeVsCurrency}">` +
-        `${percentageChangeInCurrency.toFixed(2)}%</span>` +
-        ` [<span style="${cssStyleChangeVsBtc}"> ` +
-        `${percentageChangeInBtc.toFixed(2)}% </span>BTC]`
+        `<span style="${cssStyleChangeVsCurrency}">${percentageChangeInCurrency.toFixed(2)}% </span>
+        [<span style="${cssStyleChangeVsBtc}">${percentageChangeInBtc.toFixed(2)}% </span>BTC]`
 
-    return priceChangeHtml
+    // Replace any 'NaN' numbers (so that '-' character will be displayed instead)                  
+    const priceChangeHtmlwithNaNsReplaced = priceChangeHtml.replace(/NaN/g, "-")
+    
+    return priceChangeHtmlwithNaNsReplaced
 }
 
 
 function getPrice24hrLowHighHtml( coin )
 {
-    const currency24hrLowAttribute = `coin.market_data.low_24h.${coin.currency_id}`
-    const price24hrLowInCurrency = eval(currency24hrLowAttribute)
+    const price24hrLowInCurrency = coin.market_data.low_24h[ coin.currency_id ]
+    const price24hrHighInCurrency = coin.market_data.high_24h[ coin.currency_id ]
 
-    const currency24hrHighAttribute = `coin.market_data.high_24h.${coin.currency_id}`
-    const price24hrHighInCurrency = eval(currency24hrHighAttribute)
-
-    const price24hrLowHighHtml = `24hr High: <span style="color:green">` +
-                                `${currency2DP.format(price24hrHighInCurrency)}</span><br>` +
-                                `24hr Low : <span style="color:red">` +
-                                `${currency2DP.format(price24hrLowInCurrency)}</span>`
-
+    const price24hrLowHighHtml = `24hr High: <span style="color:green">
+                                    ${currency2DP.format(price24hrHighInCurrency)}</span><br>
+                                24hr Low : <span style="color:red">
+                                    ${currency2DP.format(price24hrLowInCurrency)}</span>`
     return price24hrLowHighHtml
 }
 
 
 function getPriceAllTimeHtml( coin, highOrLow )
 {
-    const currencyATAttribute = `coin.market_data.${highOrLow}.${coin.currency_id}`
-    const priceATInCurrency = eval(currencyATAttribute)
-    const btcATAttribute = `coin.market_data.${highOrLow}.btc`
-    const priceATInBtc = eval(btcATAttribute)
+    const priceATInCurrency = eval(`coin.market_data.${highOrLow}.${coin.currency_id}`)
+    const priceATInBtc = eval(`coin.market_data.${highOrLow}.btc`)
 
-    const currencyATChangePercentageAttribute = `coin.market_data.${highOrLow}_change_percentage.${coin.currency_id}`
-    const priceATChangePercentageInCurrency = eval(currencyATChangePercentageAttribute)
+    const priceATChangePercentageInCurrency = eval(`coin.market_data.${highOrLow}_change_percentage.${coin.currency_id}`)
     const cssStyleChangeVsCurrency = cssColorForNumber(priceATChangePercentageInCurrency)
 
-    const btcATChangePercentageAttribute = `coin.market_data.${highOrLow}_change_percentage.btc`
-    const priceATChangePercentageInBtc = eval(btcATChangePercentageAttribute)
+    const priceATChangePercentageInBtc = eval(`coin.market_data.${highOrLow}_change_percentage.btc`)
     const cssStyleChangeVsBtc = cssColorForNumber(priceATChangePercentageInBtc)
 
-    const currencyATDateAttribute = `coin.market_data.${highOrLow}_date.${coin.currency_id}`
-    const priceATDateForCurrency = eval(currencyATDateAttribute)
-    const btcATDateAttribute = `coin.market_data.${highOrLow}_date.btc`
-    const priceATDateForBtc = eval(btcATDateAttribute)
+    const priceATDateForCurrency = eval(`coin.market_data.${highOrLow}_date.${coin.currency_id}`)
+    const priceATDateForBtc = eval(`coin.market_data.${highOrLow}_date.btc`)
 
-    const priceAllTimeHtml = `${highOrLow.toUpperCase()}: ` +
-                            `${currency2DP.format(priceATInCurrency)} ` +
-                            `[<span style="${cssStyleChangeVsCurrency}">` +
-                            `${priceATChangePercentageInCurrency.toFixed(0)}%</span>] ` +
-                            `<small>${priceATDateForCurrency.slice(0, 10)}</small><br>` +
-                            `${highOrLow.toUpperCase()}: ` +
-//                          `BTC: ${btc6DP.format(priceATInBtc)} ` +
-                            `<span>&#x20bf</span>${priceATInBtc} ` +
-                            `[<span style="${cssStyleChangeVsBtc}">` +
-                            `${priceATChangePercentageInBtc.toFixed(0)}%</span>] ` +
-                            `<small>${priceATDateForBtc.slice(0, 10)}</small>`
+    const priceAllTimeHtml = `${highOrLow.toUpperCase()}: ${currency2DP.format(priceATInCurrency)} 
+        [<span style="${cssStyleChangeVsCurrency}">${priceATChangePercentageInCurrency.toFixed(0)}%</span>]
+            <small> ${priceATDateForCurrency.slice(0, 10)}</small><br>
+        &nbsp &nbsp <span>&#x20bf</span>${priceATInBtc}
+        [<span style="${cssStyleChangeVsBtc}">${priceATChangePercentageInBtc.toFixed(0)}%</span>]
+            <small> ${priceATDateForBtc.slice(0, 10)}</small>`
 
     return priceAllTimeHtml
 }
@@ -204,10 +172,10 @@ function getPriceSentimentHtml( coin )
     const votesDownPercentage = coin.sentiment_votes_down_percentage
     const votesUpPercentage = coin.sentiment_votes_up_percentage
 
-    const priceSentimentHtml = `Sentiment: <span style="color:red">` +
-            `<i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}%</span><br>` +
-            `&nbsp (votes) &nbsp &nbsp <span style="color:green">` +
-            `<i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}%</span>`
+    const priceSentimentHtml = `Sentiment: <span style="color:red">
+            <i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}%</span><br>
+            &nbsp (votes) &nbsp &nbsp <span style="color:green">
+            <i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}%</span>`
 
     return priceSentimentHtml
 }
@@ -215,23 +183,23 @@ function getPriceSentimentHtml( coin )
 
 function displayMarketStats(coin) {
 
-    const currencyMarketCapAttribute = `coin.market_data.market_cap.${coin.currency_id}`
-    const marketCapInCurrency = eval(currencyMarketCapAttribute)
+    const marketCapInCurrency = coin.market_data.market_cap[coin.currency_id]
     const marketCapLine = `${currency0DP.format(marketCapInCurrency)} ${coin.currency_id.toUpperCase()}`
-    const marketCapInBtcLine = `<span>&#x20bf</span>${coin.market_data.market_cap.btc} BTC`
+    const marketCapInBtcLine = `<span>&#x20bf</span>${coin.market_data.market_cap.btc.toLocaleString()} BTC`
 
-    const currencyTotalVolumeAttribute = `coin.market_data.total_volume.${coin.currency_id}`
-    const totalVolumeInCurrency = eval(currencyTotalVolumeAttribute)
+    const totalVolumeInCurrency = coin.market_data.total_volume[coin.currency_id]
     const totalVolumeLine = `${currency0DP.format(totalVolumeInCurrency)} ${coin.currency_id.toUpperCase()}`
 
-    const totalVolumeInBtcLine = `<span>&#x20bf</span>${coin.market_data.total_volume.btc} BTC`
-    const circulatingSupplyLine = `${coin.market_data.circulating_supply} ${coin.symbol.toUpperCase()}`
-    const totalSupplyLine = `${coin.market_data.total_supply} ${coin.symbol.toUpperCase()}`
+    const totalVolumeInBtcLine = `<span>&#x20bf</span>${coin.market_data.total_volume.btc.toLocaleString()} BTC`
+    const circulatingSupplyLine = `${coin.market_data.circulating_supply.toLocaleString()} ${coin.symbol.toUpperCase()}`
+    const maxSupplyLine = Number.isNaN( coin.market_data.max_supply) ?
+            `No limit` : `${coin.market_data.max_supply.toLocaleString()} ${coin.symbol.toUpperCase()}`
 
     $("#marketCap").html( marketCapLine )
     $("#totalVolume").html( totalVolumeLine )
     $("#circulatingSupply").html( circulatingSupplyLine )
-    $("#totalSupply").html( totalSupplyLine )
+    $("#maxSupply").html( maxSupplyLine )
+
     $("#marketCapInBtc").html( marketCapInBtcLine ) 
     $("#totalVolumeInBtc").html( totalVolumeInBtcLine ) 
 }
@@ -265,19 +233,16 @@ $("#myShowChartButton").click(async function () {
         theCoinPageData.price_graph = graph.price_graph
 
         // Display the graph
-        console.log("In EH: theCoinData.price_graph =", theCoinPageData.price_graph) 
-        const priceGraph = getPriceGraph(theCoinPageData)
-
-        console.log("In EH: priceGraph =", priceGraph) 
-
-        displayGraph( priceGraph )
+        const priceGraphCriteria = getPriceGraphCriteria(theCoinPageData)
+        displayGraph( priceGraphCriteria )
 
     } catch (error) {
         console.log("Something went wrong in EH: " + error)
     }
 })
 
-function getPriceGraph( coin ){
+
+function getPriceGraphCriteria( coin ){
 
     const startDate = $("#myDatepicker").datepicker("getDate");
     const graph = {
@@ -297,6 +262,7 @@ function getPriceGraph( coin ){
     }
     return graph
 }
+
 
 function displayGraph( graph ){
 // Create and display the coin price chart
@@ -326,6 +292,51 @@ function displayGraph( graph ){
                 }
             }
         });
-
 }
 
+
+// Event Handler for when user clicks on a currency (in currency selector)
+function changeCurrencyOnCoinPage(event){
+    try {
+        console.log("In coinLogic.js: EH changeCurrency()")
+        // Set the currency selector to the new currency
+        const currencyId = $(event.target).text()
+        $("#currencyLabelCS").text( currencyId )
+
+        // Update the currency formatters to new currency
+        currency2DP = newCurrencyFormater(currencyId, 2)
+        currency0DP = newCurrencyFormater(currencyId, 0)
+
+        // Update global data objects to the new currency
+        theCoinPageData.currency_id = coinCriteria.currencyId = currencyId.toLowerCase()
+
+            // (Assume same coinCriteria.graphStartDaysAgo value)
+              // Get the new graph data (given start date selected by user)
+              // const startDate = $("#myDatepicker").datepicker("getDate")
+              //const daysAgo = getDaysAgo( startDate )
+              //coinCriteria.graphStartDaysAgo = daysAgo
+
+              // NOTE : getPriceGraphCritera ACTUALLY updates coinCriteria (incl. start date)
+              // TODO: Consider refacoring an/or renaming to set PriceGraphCritera()
+
+        // Fetch chart data and then display it on the page      
+        getCoinGraphData(coinCriteria)
+        .then (
+            (graphData) => {
+                theCoinPageData.price_graph = graphData.price_graph
+
+                // Display the graph
+                const priceGraphCriteria = getPriceGraphCriteria(theCoinPageData)      
+                displayGraph( priceGraphCriteria )
+            }
+        )
+
+        // Update those page sections that cointain currency based informaion      
+        displayCoinHeader( theCoinPageData )
+        displayPriceStats( theCoinPageData )
+        displayMarketStats( theCoinPageData )
+
+    } catch (error) {
+          console.log("In EH changeCurrencyOnCoinPage(): Something went wrong: " + error)
+    }
+  }
