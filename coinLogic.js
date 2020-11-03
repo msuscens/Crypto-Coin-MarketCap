@@ -33,7 +33,7 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
         // Display the data on the coin page, section by section        
             displayCoinHeader( theCoinPageData )
 
-            const priceGraphCriteria = getPriceGraphCriteria( theCoinPageData )
+            const priceGraphCriteria = setPriceGraphCriteria( theCoinPageData )
             displayGraph( priceGraphCriteria )
 
             displayPriceStats( theCoinPageData )
@@ -233,7 +233,7 @@ $("#myShowChartButton").click(async function () {
         theCoinPageData.price_graph = graph.price_graph
 
         // Display the graph
-        const priceGraphCriteria = getPriceGraphCriteria(theCoinPageData)
+        const priceGraphCriteria = setPriceGraphCriteria(theCoinPageData)
         displayGraph( priceGraphCriteria )
 
     } catch (error) {
@@ -242,7 +242,7 @@ $("#myShowChartButton").click(async function () {
 })
 
 
-function getPriceGraphCriteria( coin ){
+function setPriceGraphCriteria( coin ){
 
     const startDate = $("#myDatepicker").datepicker("getDate");
     const graph = {
@@ -298,26 +298,17 @@ function displayGraph( graph ){
 // Event Handler for when user clicks on a currency (in currency selector)
 function changeCurrencyOnCoinPage(event){
     try {
-        console.log("In coinLogic.js: EH changeCurrency()")
-        // Set the currency selector to the new currency
+        // Set the UI's currency selector and currency cookie to the new currency
         const currencyId = $(event.target).text()
         $("#currencyLabelCS").text( currencyId )
+        setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
 
         // Update the currency formatters to new currency
         currency2DP = newCurrencyFormater(currencyId, 2)
         currency0DP = newCurrencyFormater(currencyId, 0)
 
-        // Update global data objects to the new currency
+        // Update global data objects and to the new currency
         theCoinPageData.currency_id = coinCriteria.currencyId = currencyId.toLowerCase()
-
-            // (Assume same coinCriteria.graphStartDaysAgo value)
-              // Get the new graph data (given start date selected by user)
-              // const startDate = $("#myDatepicker").datepicker("getDate")
-              //const daysAgo = getDaysAgo( startDate )
-              //coinCriteria.graphStartDaysAgo = daysAgo
-
-              // NOTE : getPriceGraphCritera ACTUALLY updates coinCriteria (incl. start date)
-              // TODO: Consider refacoring an/or renaming to set PriceGraphCritera()
 
         // Fetch chart data and then display it on the page      
         getCoinGraphData(coinCriteria)
@@ -326,7 +317,7 @@ function changeCurrencyOnCoinPage(event){
                 theCoinPageData.price_graph = graphData.price_graph
 
                 // Display the graph
-                const priceGraphCriteria = getPriceGraphCriteria(theCoinPageData)      
+                const priceGraphCriteria = setPriceGraphCriteria(theCoinPageData)      
                 displayGraph( priceGraphCriteria )
             }
         )

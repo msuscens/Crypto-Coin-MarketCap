@@ -1,3 +1,8 @@
+
+// Globals to assist in use of currency Cookie
+const currencyCookie = "CoinPriceCurrencyCookie"
+const cookieDurationInSeconds = 1209600   // 2 weeks
+
 // HELPER FUNCTIONS
 
 // Use to initialise a currency formatter function,
@@ -152,7 +157,6 @@ function getCurrencySymbol( currencyId ){
 
 
 // Cookie Helper functions - courtesy of Kenneth
-// Not used yet - for information (learning)) and possible future use.
 
 function setCookie(cname, cvalue, seconds) {
     var d = new Date();

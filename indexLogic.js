@@ -7,8 +7,14 @@
 // @ts-check
 
 // Global - data for the page
-const defaultCurrency = "usd"
+const fallbackCurrency = "usd"
 let theCoins = []   // Array of coin data (yet to be obtained)
+
+// Use cookie for default currency
+let defaultCurrency
+if ( checkCookie(currencyCookie) == true ) defaultCurrency = getCookie(currencyCookie)
+else defaultCurrency = fallbackCurrency
+setCookie(currencyCookie, defaultCurrency, cookieDurationInSeconds) // set or refresh cookie
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
 let currency2DP = newCurrencyFormater(defaultCurrency, 2)
@@ -191,14 +197,15 @@ function displayCoinPage(event){
 // Event Handler for when user clicks on a currency (in currency selector)
 function changeCurrencyonIndexPage(event){
     try {
-      // Set the currency selector to the new currency
+      // Set the UI's currency selector and applications currency cookie
       const currencyId = $(event.target).text()
       $("#currencyLabelCS").text( currencyId )
-  
+      setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
+
       // Update the currency formatters to new currency
       currency2DP = newCurrencyFormater(currencyId, 2)
       currency0DP = newCurrencyFormater(currencyId, 0)
-  
+    
       // Obtain the coin data
       getTheIndexPageData( currencyId )
       .then (
