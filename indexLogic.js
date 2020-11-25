@@ -33,9 +33,40 @@ try {
 
             // Put the currency selector component onto the page
             const currencies = getSupportedCurrencies() //TODO: Replace by getting data via getTheIndexPageData()
-            const componentHtml = createCurrencySelectorDropDownHtml(currencies, defaultCurrency,
+            const selectorComponentHtml = createCurrencySelectorDropDownHtml(currencies, defaultCurrency,
                                                                     "changeCurrencyonIndexPage(event)")
-            $("#currencySelectorComponent").html(componentHtml)
+            $("#currencySelectorComponent").html(selectorComponentHtml)
+
+
+            // Put coin search component onto page
+            const searchComponentHtml = COIN_SEARCH_COMPONENT.createComponentHtml()
+            $("#searchComponent").html(searchComponentHtml)
+
+            // Set coin serach component event handles for managing hiding coin list
+            $("#coinSearchInput").focusout(function(event) {
+                console.log(`In $("#coinSearchInput").focusout()`)
+
+                if (COIN_SEARCH_COMPONENT._searchListItemClicked == true) {  
+                    console.log("... as user has clicked on a Search list item.")
+                    return
+                }
+                else {  // Clicked elsewhere, so just close the list dialog
+                    console.log("... as user has clicked elsewhere (but not on search list item).")
+                    $("#coinSearchList").removeClass("d-block")
+                    $("#coinSearchList").addClass("d-none")
+                }
+            })
+
+            $("#coinSearchList").mousedown(function(event) {
+                console.log("IN MOUSEDOWN EVENT HANDLER") 
+                COIN_SEARCH_COMPONENT._searchListItemClicked = true
+            })
+
+            $("#coinSearchList").mouseup(function(event) {
+                console.log("IN MOUSEUP EVENT HANDLER")
+                COIN_SEARCH_COMPONENT._searchListItemClicked = false        
+            })   
+
         }  
     )
 } catch (error) {
@@ -189,8 +220,8 @@ function displayCoinPage(event){
 
         window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
  
-    } catch (error) {
-        console.log("Something went wrong in IndexLogic: DisplayCoinPage(event): " + error)
+    } catch (errMsg) {
+        console.log("Something went wrong in IndexLogic: displayCoinPage(event): " + errMsg)
     }
 }
 
@@ -219,5 +250,4 @@ function changeCurrencyonIndexPage(event){
     } catch (error) {
           console.log("In EH changeCurrencyonIndexPage(): Something went wrong: " + error)
     }
-  }
-
+}

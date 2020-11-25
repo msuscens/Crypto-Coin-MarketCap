@@ -16,6 +16,16 @@ const API_ENDPOINTS = {
         return (this._BASE_URL + SUPPORTED_CURRENCIES_ENDPOINT)
     },
 
+    getListAllCoinsUrl: function() {
+      const COIN_LIST_ENDPOINT = "/coins/list"
+      return (this._BASE_URL + COIN_LIST_ENDPOINT)
+    },
+
+    getTrendingSearchesUrl: function() {
+      const TRENDING_SEARCHES_ENDPOINT = "/search/trending"
+      return (this._BASE_URL + TRENDING_SEARCHES_ENDPOINT)
+    },
+
     getCoinsMarketUrl: function(currencyId) {
         const COINS_MARKET_ENDPOINT = "/coins/markets?vs_currency=" + currencyId.toLowerCase() +
             "&order=market_cap_desc&per_page=100&page=1&sparkline=false" +
@@ -41,7 +51,7 @@ const API_ENDPOINTS = {
                                     "&from=" + startUnixTimestamp +
                                     "&to=" + endUnixTimestamp        
         return (this._BASE_URL + MARKET_CHART_ENDPOINT)
-    },
+    }
 
     // *** NOT CURRENTLEY USED  ***
  /*
@@ -67,7 +77,8 @@ const API_ENDPOINTS = {
 
 async function getTheIndexPageData(currencyId) {
 
-    const coinsFromCoingeko = await getCoinsFromCoinGeko(currencyId)
+    
+  const coinsFromCoingeko = await getCoinsFromCoinGeko(currencyId)
 
     return collateCoinsListData(coinsFromCoingeko)
 }
@@ -121,6 +132,23 @@ function collateCoinsListData(coinDataFromCoingeko) {
 }
 
 
+function getSupportedCurrencies(){
+  // List of supported currencies for the Index (home) page.
+      const supportedCurrencies = [
+          "btc",
+          "eth",
+          "usd",
+          "chf",
+          "eur",
+          "gbp",
+          "hkd",
+          "jpy",
+          "cny"
+      ]
+      return supportedCurrencies
+  }
+
+  
 // FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
 
 async function getTheCoinPageData(coinCriteria) {
@@ -128,7 +156,7 @@ async function getTheCoinPageData(coinCriteria) {
     // Get the coin data from CoinGeko API
     const theCoin = await getSpecificCoinData(coinCriteria)
         
-        theCoin.currency_id = coinCriteria.currencyId
+        theCoin.currency_id = coinCriteria.currencyId.toLowerCase()
 
         console.log("In getTheCoinPageData(): theCoin = ", theCoin)
 
@@ -282,19 +310,200 @@ async function getCoinGraphData(coinCriteria) {
 }
 
 
-function getSupportedCurrencies(){
-// List of supported currencies for the Index (home) page.
-    const supportedCurrencies = [
-        "btc",
-        "eth",
-        "usd",
-        "chf",
-        "eur",
-        "gbp",
-        "hkd",
-        "jpy",
-        "cny"
+// FUNCTIONS TO PROVIDE THE SEARCH COMPONENT DATA
+
+function getAvailableCoins() {
+// Hardcoded Test Data
+// Extract from data return from: https://api.coingecko.com/api/v3/coins/list
+
+    const allCoins = [
+      {
+        "id": "aave",
+        "symbol": "aave",
+        "name": "Aave"
+      },
+      {
+        "id": "aave-dai",
+        "symbol": "adai",
+        "name": "Aave DAI"
+      },
+      {
+        "id": "aave-eth",
+        "symbol": "aeth",
+        "name": "Aave ETH"
+      },
+      {
+        "id": "abc-chain",
+        "symbol": "abc",
+        "name": "ABC Chain"
+      },
+      {
+        "id": "beam",
+        "symbol": "beam",
+        "name": "BEAM"
+      },
+      {
+        "id": "bean-cash",
+        "symbol": "bitb",
+        "name": "Bean Cash"
+      },
+      {
+        "id": "beat",
+        "symbol": "beat",
+        "name": "BEAT"
+      },
+      {
+        "id": "beaxy-exchange",
+        "symbol": "bxy",
+        "name": "Beaxy"
+      },
+      {
+        "id": "bitcoin",
+        "symbol": "btc",
+        "name": "Bitcoin"
+      },
+      {
+        "id": "bitcoin-2",
+        "symbol": "btc2",
+        "name": "Bitcoin 2"
+      },
+      {
+        "id": "bitcoin-5000",
+        "symbol": "bvk",
+        "name": "Bitcoin 5000"
+      },
+      {
+        "id": "bitcoin-adult",
+        "symbol": "btad",
+        "name": "Bitcoin Adult"
+      },
+      {
+        "id": "bitcoin-air",
+        "symbol": "xba",
+        "name": "Bitcoin Air"
+      },
+      {
+        "id": "bitcoin-atom",
+        "symbol": "bca",
+        "name": "Bitcoin Atom"
+      },
+      {
+        "id": "bitcoinbam",
+        "symbol": "btcbam",
+        "name": "BitcoinBam"
+      },
+      {
+        "id": "bitcoin-cash",
+        "symbol": "bch",
+        "name": "Bitcoin Cash"
+      },
+      {
+        "id": "bitcoin-cash-sv",
+        "symbol": "bsv",
+        "name": "Bitcoin SV"
+      }
     ]
-    return supportedCurrencies
+
+    $.each(allCoins, function (index, coin) {
+      coin.nameLine = `${coin.name} (${coin.symbol})`
+    })
+
+    return allCoins
 }
 
+function getMostPopularCoinSearches() {
+// Hardcoded Test Data 
+// Data return from: https://api.coingecko.com/api/v3/search/trending
+
+
+    const mostPopularSearches = [
+        {
+            "coins": [
+              {
+                "item": {
+                  "id": "hegic",
+                  "name": "Hegic",
+                  "symbol": "HEGIC",
+                  "market_cap_rank": 155,
+                  "thumb": "https://assets.coingecko.com/coins/images/12454/thumb/Hegic.png?1599938210",
+                  "large": "https://assets.coingecko.com/coins/images/12454/large/Hegic.png?1599938210",
+                  "score": 0
+                }
+              },
+              {
+                "item": {
+                  "id": "team-finance",
+                  "name": "Team Finance",
+                  "symbol": "TEAM",
+                  "market_cap_rank": 664,
+                  "thumb": "https://assets.coingecko.com/coins/images/12480/thumb/team_token_logo.jpg?1600158847",
+                  "large": "https://assets.coingecko.com/coins/images/12480/large/team_token_logo.jpg?1600158847",
+                  "score": 1
+                }
+              },
+              {
+                "item": {
+                  "id": "wabi",
+                  "name": "Wabi",
+                  "symbol": "WABI",
+                  "market_cap_rank": 544,
+                  "thumb": "https://assets.coingecko.com/coins/images/1338/thumb/Tael.png?1547035364",
+                  "large": "https://assets.coingecko.com/coins/images/1338/large/Tael.png?1547035364",
+                  "score": 2
+                }
+              },
+              {
+                "item": {
+                  "id": "axie-infinity",
+                  "name": "Axie Infinity",
+                  "symbol": "AXS",
+                  "market_cap_rank": 313,
+                  "thumb": "https://assets.coingecko.com/coins/images/13029/thumb/axie_infinity_logo.png?1604471082",
+                  "large": "https://assets.coingecko.com/coins/images/13029/large/axie_infinity_logo.png?1604471082",
+                  "score": 3
+                }
+              },
+              {
+                "item": {
+                  "id": "aave",
+                  "name": "Aave",
+                  "symbol": "AAVE",
+                  "market_cap_rank": 33,
+                  "thumb": "https://assets.coingecko.com/coins/images/12645/thumb/AAVE.png?1601374110",
+                  "large": "https://assets.coingecko.com/coins/images/12645/large/AAVE.png?1601374110",
+                  "score": 4
+                }
+              },
+              {
+                "item": {
+                  "id": "renbtc",
+                  "name": "renBTC",
+                  "symbol": "RENBTC",
+                  "market_cap_rank": 55,
+                  "thumb": "https://assets.coingecko.com/coins/images/11370/thumb/renBTC.png?1589985711",
+                  "large": "https://assets.coingecko.com/coins/images/11370/large/renBTC.png?1589985711",
+                  "score": 5
+                }
+              },
+              {
+                "item": {
+                  "id": "keep3rv1",
+                  "name": "Keep3rV1",
+                  "symbol": "KP3R",
+                  "market_cap_rank": 220,
+                  "thumb": "https://assets.coingecko.com/coins/images/12966/thumb/keep3vr_logo.jpg?1603878182",
+                  "large": "https://assets.coingecko.com/coins/images/12966/large/keep3vr_logo.jpg?1603878182",
+                  "score": 6
+                }
+              }
+            ],
+            "exchanges": []
+        }
+    ]
+
+    $.each(mostPopularSearches[0].coins, function (index, coin) {
+      coin.item.nameLine = `${coin.item.name} (${coin.item.symbol}) #${coin.item.market_cap_rank}`
+    })
+
+    return mostPopularSearches[0].coins
+}

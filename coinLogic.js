@@ -122,7 +122,7 @@ function getPriceChangeHtml( coin, baseAttribute )
         `<span style="${cssStyleChangeVsCurrency}">${percentageChangeInCurrency.toFixed(2)}% </span>
         [<span style="${cssStyleChangeVsBtc}">${percentageChangeInBtc.toFixed(2)}% </span>BTC]`
 
-    // Replace any 'NaN' numbers (so that '-' character will be displayed instead)                  
+    // Set display character for missing numbers (set as NaNs in data)                  
     const priceChangeHtmlwithNaNsReplaced = priceChangeHtml.replace(/NaN/g, "-")
     
     return priceChangeHtmlwithNaNsReplaced
