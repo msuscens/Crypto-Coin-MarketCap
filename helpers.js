@@ -191,3 +191,16 @@ function checkCookie(cname) {
     }
 }
 
+/*
+  _decodeHtml(html) {
+    try {
+      const textElement = document.createElement("textarea")
+      textElement.innerHTML = html
+      return textElement.value
+    }
+    catch (errMsg){
+      throw("Error caught in decodeHtml(html): Failed to return decoded html: " + errMsg)
+    }
+  }
+*/
+

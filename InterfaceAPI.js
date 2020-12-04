@@ -507,3 +507,104 @@ function getMostPopularCoinSearches() {
 
     return mostPopularSearches[0].coins
 }
+
+
+function getMostPopularCoinSearches2() {
+  // Hardcoded Test Data 
+  // Data return from: https://api.coingecko.com/api/v3/search/trending
+  
+  // Modified version to strip out inital levels of array objects, ie. from::
+  // [ { "coins" : [ {"item" : {
+  //                              "id" : "xxx"
+  //                              "name": "yyy"
+  //                              "symbol": "zzz",
+  //                              ....
+  //                              },
+  //                 }, ...
+  //               ],
+  //     "exchanges" : []
+  //   }
+  // ]
+  // To simplier array of objects, ie.
+  // [
+  //    {
+  //      "id" : "xxx"
+  //      "name": "yyy"
+  //      "symbol": "zzz",
+  //      ....
+  //    }, ...    
+  // ]
+
+      const mostPopularSearches = [
+                {
+                    "id": "hegic",
+                    "name": "Hegic",
+                    "symbol": "HEGIC",
+                    "market_cap_rank": 155,
+                    "thumb": "https://assets.coingecko.com/coins/images/12454/thumb/Hegic.png?1599938210",
+                    "large": "https://assets.coingecko.com/coins/images/12454/large/Hegic.png?1599938210",
+                    "score": 0
+                },
+                {
+                    "id": "team-finance",
+                    "name": "Team Finance",
+                    "symbol": "TEAM",
+                    "market_cap_rank": 664,
+                    "thumb": "https://assets.coingecko.com/coins/images/12480/thumb/team_token_logo.jpg?1600158847",
+                    "large": "https://assets.coingecko.com/coins/images/12480/large/team_token_logo.jpg?1600158847",
+                    "score": 1
+                },
+                {
+                    "id": "wabi",
+                    "name": "Wabi",
+                    "symbol": "WABI",
+                    "market_cap_rank": 544,
+                    "thumb": "https://assets.coingecko.com/coins/images/1338/thumb/Tael.png?1547035364",
+                    "large": "https://assets.coingecko.com/coins/images/1338/large/Tael.png?1547035364",
+                    "score": 2
+                },
+                {
+                    "id": "axie-infinity",
+                    "name": "Axie Infinity",
+                    "symbol": "AXS",
+                    "market_cap_rank": 313,
+                    "thumb": "https://assets.coingecko.com/coins/images/13029/thumb/axie_infinity_logo.png?1604471082",
+                    "large": "https://assets.coingecko.com/coins/images/13029/large/axie_infinity_logo.png?1604471082",
+                    "score": 3
+                },
+                {
+                    "id": "aave",
+                    "name": "Aave",
+                    "symbol": "AAVE",
+                    "market_cap_rank": 33,
+                    "thumb": "https://assets.coingecko.com/coins/images/12645/thumb/AAVE.png?1601374110",
+                    "large": "https://assets.coingecko.com/coins/images/12645/large/AAVE.png?1601374110",
+                    "score": 4
+                },
+                {
+                    "id": "renbtc",
+                    "name": "renBTC",
+                    "symbol": "RENBTC",
+                    "market_cap_rank": 55,
+                    "thumb": "https://assets.coingecko.com/coins/images/11370/thumb/renBTC.png?1589985711",
+                    "large": "https://assets.coingecko.com/coins/images/11370/large/renBTC.png?1589985711",
+                    "score": 5
+                },
+                {
+                    "id": "keep3rv1",
+                    "name": "Keep3rV1",
+                    "symbol": "KP3R",
+                    "market_cap_rank": 220,
+                    "thumb": "https://assets.coingecko.com/coins/images/12966/thumb/keep3vr_logo.jpg?1603878182",
+                    "large": "https://assets.coingecko.com/coins/images/12966/large/keep3vr_logo.jpg?1603878182",
+                    "score": 6
+                }
+            ]
+             
+
+      $.each(mostPopularSearches, function (index, coin) {
+        coin.nameLine = `${coin.name} (${coin.symbol}) #${coin.market_cap_rank}`
+      })
+  
+      return mostPopularSearches
+  }

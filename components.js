@@ -12,10 +12,10 @@
 
 
 // COMPONENTS
-
+//
 // Currency Selector dropdown component
-
-function createCurrencySelectorDropDownHtml ( currencies, selectedCurrency, onclickFunctionCall ){
+//
+function createCurrencySelectorDropDownHtml( currencies, selectedCurrency, onclickFunctionCall ){
 
   let htmlCurrencySelector = `<div class="dropdown">
                                 <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">
@@ -34,128 +34,54 @@ function createCurrencySelectorDropDownHtml ( currencies, selectedCurrency, oncl
   return htmlCurrencySelector
 }
 
+// TODO: Consider refactoring Currency Selector function into a CurrencySelectorComponent class
+// with an object constructor and get method to obtain the currency id .... 
+//   
+//  function getCurrencyId(){
+//    const currencyId = $("#currencyLabelCS").text()
+//    return currencyId
+//  }
 
-// Coin Search Component object
 
-const COIN_SEARCH_COMPONENT = {
-  _availableCoins: getAvailableCoins(),
-  _popularSearches: getMostPopularCoinSearches(),
-  _maxInSearchList: 8,
-  _searchListItemClicked: false,
-
-  _createPopularSearchesListOptionsHtml: function(){
-    let coinListOptionsHtml = ""
-    const currencyId = $("#currencyLabelCS").text()
-    for (let i = 0; i < this._popularSearches.length; i++){
-      const popularCoin = `${this._popularSearches[i].item.nameLine}`
-      const coinId = this._popularSearches[i].item.id
-      coinListOptionsHtml += `\n<li><a href="coin.html?coinid=${coinId}&currencyid=${currencyId}"> ${popularCoin} </a></li>`
-    }
-    return coinListOptionsHtml
-  },
-
+//
+// Coin Search Component
+//
+class CoinSearchComponent extends SearchComponent {
   
-  createComponentHtml: function(){
-
-    const htmlCoinListOptions  = this._createPopularSearchesListOptionsHtml()
-
-    const htmlSearchBar = `<div>
-                              <form onsubmit="return COIN_SEARCH_COMPONENT.selectFirstItemInSearchList()">
-                                <input id="coinSearchInput" class="rounded-pill"
-                                  type="text" placeholder="Search for a coin..."
-                                  title="Type in a coin name or id"
-                                  onclick="COIN_SEARCH_COMPONENT.showSearchList()"
-                                  onkeyup="COIN_SEARCH_COMPONENT.searchEngine()">
-                                <ul id="coinSearchList" class="searchList shadow d-none"
-                                    aria-label="Trending searches:"> 
-                                  ${htmlCoinListOptions}
-                                </ul>
-                            </form>
-                          </div>`
-
-    return htmlSearchBar
-  },
-
-  showSearchList: function(){
-    console.log("In showSearchList()")
-    const searchList = $('#coinSearchList')
-    searchList.removeClass("d-none")
-    searchList.addClass("d-block")
-  },
-
-  searchEngine: function(){
-    setTimeout(() => {
-      const inputText = document.getElementById("coinSearchInput").value                 
-      const searchList = $('#coinSearchList')
-      let numListItemsToAdd = (this._maxInSearchList < this._availableCoins.length) ?
-                              this._maxInSearchList : this._availableCoins.length             
-      searchList.attr("disabled",false) 
-      searchList.html("")
-      const currencyId = $("#currencyLabelCS").text().toLowerCase() 
-      for (let i = 0; (i < this._availableCoins.length) && (numListItemsToAdd > 0); i++){
-        if (this._availableCoins[i].nameLine.indexOf(inputText) != -1) {
-              const coinId = this._availableCoins[i].id
-              const listItemHtml = `<li><a href="coin.html?coinid=${coinId}&currencyid=${currencyId}">${this._availableCoins[i].nameLine}</a></li>`
-              searchList.append( listItemHtml )
-              numListItemsToAdd--
-        }
-      }
-    },300)
-  },
-
-  selectFirstItemInSearchList: function(){  //  renamed from loadCoinPage()
+  _createHtmlForListItem( suggestionOrSearchData, dataIndex ){
+    // Implementation for to create Coin list item HTML (ie. a single list item). 
+    // This method overides the superclass method of the same name (ie. in the SearchComponent class).
     try {
-      console.log("In selectFirstItemInSearchList()")
-
-      // get the href of first list item, and go to that url
-      const url = getFirstListItemsHrefUrl()
-      window.location.href = url
-      return false
+      const coinId = suggestionOrSearchData[dataIndex].id
+      const listItemText = suggestionOrSearchData[dataIndex].nameLine
+      const listItemHtml = `<li><a href="coin.html?coinid=${coinId}"> ${listItemText} </a></li>`
+    
+      return listItemHtml
     }
     catch (errMsg){
-      console.log( "Error caught in eh selectFirstItemInSearchList(): " + errMsg )
-    }
-  },
-
-}
-
-// SEARCH COMPONENT HELPER FUNCTIONS
-
-function getFirstListItemsHrefUrl(){
-  try {
-    const listHtml = $('#coinSearchList').html()
-    const preceddingHtmlForHref = '<li><a href="'
-    const startIndexOfFirstListItem = listHtml.indexOf(preceddingHtmlForHref)
-    if ( startIndexOfFirstListItem > -1){  
-      // Extract the href url (of first list item)
-      const startIndexOfHrefUrl = startIndexOfFirstListItem + preceddingHtmlForHref.length
-      const endIndexOfHrefUrl = listHtml.indexOf('"', startIndexOfHrefUrl+1)
-      if (endIndexOfHrefUrl > -1){
-        const hrefUrlFromHtml = listHtml.slice( startIndexOfHrefUrl, endIndexOfHrefUrl)
-        const url = decodeHtml( hrefUrlFromHtml )
-        console.log(`hrefUrlFromHtml=${hrefUrlFromHtml}`)
-        console.log(`url=${url}`)
-        return url
-      }
-      else {
-        throw "href url was not found (for the first list item)."
-      }
-    }
-    else {
-      throw "Html for start of first list item was not found."
+      throw ("CoinSearchComponent error in _createHtmlForListItem( suggestionOrSearchData, dataIndex ): " + errMsg)
     }
   }
-  catch (errMsg){
-    throw("Error: href url not found by getFirstListItemsHrefUrl(): " + errMsg)
+  
+  _listItemClickEvent( searchComponent, event) {
+    // Implementation for a click event on a Coin Search List Item. 
+    // This method overides the superclass method of the same name (ie. in the SearchComponent class).
+    try{
+      console.log("In _listItemClickEvent( searchComponent, event)")
+    
+      // Construct full url for the Coin page (ie. add currency )
+      const currencyId = $("#currencyLabelCS").text().toLowerCase() 
+      const coinPageUrl = `${event.target.href}&currencyid=${currencyId}` 
+      console.log(`coinPageurl = ${coinPageUrl}`)
+    
+      // Reset input and search list (in case user goes 'back' in browser)
+      super._listItemClickEvent( searchComponent, event)
+  
+      // Goto Coin Page
+      window.location.href = coinPageUrl
+    }
+    catch (errMsg){
+      throw ("CoinSearchComponent error in _listItemClickEvent( searchComponent, event) " + errMsg)
+    }
   }
 }
-
-
-function decodeHtml(html) {
-  const textElement = document.createElement("textarea")
-  textElement.innerHTML = html
-  return textElement.value
-}
-
-
-

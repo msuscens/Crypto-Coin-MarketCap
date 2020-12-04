@@ -38,34 +38,25 @@ try {
             $("#currencySelectorComponent").html(selectorComponentHtml)
 
 
-            // Put coin search component onto page
-            const searchComponentHtml = COIN_SEARCH_COMPONENT.createComponentHtml()
-            $("#searchComponent").html(searchComponentHtml)
+            // Create coin search component, adding it onto page
+            const coinSearchComponentData = { idSC: "coinSearchComponent",
+                                              idSCForm: "coinSearchForm",
+                                              idSCInput: "coinSearchInput",
+                                              idSCList: "coinSearchList",
+                                              textSC : { input_title: "Type in a coin name or id",
+                                                         input_placeholder: "Search for a coin...",
+                                                         suggestions_list_title: "Trending searches:",
+                                                         searchPool_list_title: "Top matching coins:"
+                                                       },
+                                              searchPool: getAvailableCoins(),
+                                              suggestions : getMostPopularCoinSearches2(),
+                                              maxItemsInSearchList : 8                                           
+                                             }
+            console.log(coinSearchComponentData)
 
-            // Set coin serach component event handles for managing hiding coin list
-            $("#coinSearchInput").focusout(function(event) {
-                console.log(`In $("#coinSearchInput").focusout()`)
-
-                if (COIN_SEARCH_COMPONENT._searchListItemClicked == true) {  
-                    console.log("... as user has clicked on a Search list item.")
-                    return
-                }
-                else {  // Clicked elsewhere, so just close the list dialog
-                    console.log("... as user has clicked elsewhere (but not on search list item).")
-                    $("#coinSearchList").removeClass("d-block")
-                    $("#coinSearchList").addClass("d-none")
-                }
-            })
-
-            $("#coinSearchList").mousedown(function(event) {
-                console.log("IN MOUSEDOWN EVENT HANDLER") 
-                COIN_SEARCH_COMPONENT._searchListItemClicked = true
-            })
-
-            $("#coinSearchList").mouseup(function(event) {
-                console.log("IN MOUSEUP EVENT HANDLER")
-                COIN_SEARCH_COMPONENT._searchListItemClicked = false        
-            })   
+            const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
+            
+            console.log(coinSearchComponent)
 
         }  
     )
