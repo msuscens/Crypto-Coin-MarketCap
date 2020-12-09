@@ -21,6 +21,10 @@
     <!-- Font Awesome -->
     <script src="https://kit.fontawesome.com/e0c2649351.js" crossorigin="anonymous"></script>
 
+    <!-- Include applications css styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="searchComponentStyles.css">
+
 </head>
 
 <body>
@@ -37,10 +41,7 @@
             </div>
 
             <div class="col-sm-3" align="right">
-                <div id="searchControl">
-                    <label for="myCoinSearchInput">Search</label>
-                    <input id="myCoinSearchInput" type="text" placeholder="Coin name or id"></input>
-                </div>
+                <div id="coinSearchComponent"></div>  <!-- Component placeholder  -->
             </div>
         </div>
         <hr>
@@ -197,6 +198,7 @@
 
     <script src="helpers.js"></script>
     <script src="interfaceAPI.js"></script>
+    <script src="searchComponent.js"></script>
     <script src="components.js"></script>
     <script src="coinLogic.js"></script>
 

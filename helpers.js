@@ -8,6 +8,7 @@ const cookieDurationInSeconds = 1209600   // 2 weeks
 // Use to initialise a currency formatter function,
 // E.g. const currency2DP = newCurrencyFormater("USD", 2)
 function newCurrencyFormater(currencyType, decimalPlaces) {
+  try {
     const formatter = new Intl.NumberFormat("en-US",
         {
             style: "currency", currency: currencyType,
@@ -15,17 +16,27 @@ function newCurrencyFormater(currencyType, decimalPlaces) {
             maximumFractionDigits: decimalPlaces
         })
     return formatter
+  }
+  catch(errMsg){
+    throw("In newCurrencyFormater(currencyType, decimalPlaces): " + errMsg)
+  }
 }
 
 function sumMarketCap(myCoins) {
+  try {
     let sum = 0;
     for (let coin of myCoins) {
         sum += (coin.market_cap ? coin.market_cap : 0)
     }
     return sum
+  }
+  catch(errMsg){
+    throw("In sumMarketCap(myCoins): " + errMsg)
+  }
 }
 
 function cssColorForNumber(number) {
+  try {
     // Create attribute string: green for positive number, red for a negative, and black if zero.
 
     let color = "black"
@@ -33,11 +44,15 @@ function cssColorForNumber(number) {
     else if (number < 0) color = "red"
 
     return "color:" + color
+  }
+  catch(errMsg){
+    throw("In cssColorForNumber(number): " + errMsg)
+  }
 }
 
 
 function getCoinObjectAttribute(IdElement) {
-
+  try {
     let coinObjectAttribute = ""
 
     switch (IdElement) {
@@ -75,12 +90,16 @@ function getCoinObjectAttribute(IdElement) {
             throw ("Error: Unknown table column: " + IdElement)
 
     }
-    return coinObjectAttribute;
+    return coinObjectAttribute
+  }
+  catch(errMsg){
+    throw("In getCoinObjectAttribute(IdElement): " + errMsg)
+  }
 }
 
 
 function createCompareFunctionBody(object, attribute, sortOrder) {
-
+  try {
     const getTypeofCoinAttributeValue = Function("object", `return typeof object.${attribute}`)
     const coinAttributeValueType = getTypeofCoinAttributeValue(object)
 
@@ -108,31 +127,42 @@ function createCompareFunctionBody(object, attribute, sortOrder) {
     else throw ("Error: Unexpected coinAttributeValueType of :" + coinAttributeValueType)
 
     return functionBody
+  }
+  catch(errMsg){
+    throw("In createCompareFunctionBody(object, attribute, sortOrder): " + errMsg)
+  }
 }
 
 
 function getPreviousDate(numDaysAgo) {
-
+  try {
     const currentDateTime = new Date()
     const previousDate = new Date()
     previousDate.setDate(currentDateTime.getDate() - numDaysAgo)
 
     return previousDate
-
+  }
+  catch(errMsg){
+    throw("In getPreviousDate(numDaysAgo): " + errMsg)
+  }
 }
 
 function getDaysAgo(prevoiusDate) {
-
+  try {
     const currentDateTime = new Date()
     const diffInMilliseconds = currentDateTime.getTime() - prevoiusDate.getTime()
     const numDaysAgo = diffInMilliseconds / (1000 * 3600 * 24) 
 
     return numDaysAgo
+  }
+  catch(errMsg){
+    throw("In getDaysAgo(prevoiusDate): " + errMsg)
+  }
 }
 
 
 function getParamFromUrl(url, paramId) {
-
+  try {
     const startParamIdPos = url.lastIndexOf(paramId)
     if (startParamIdPos == -1) {
         throw new Error(`Parameter: "${paramId}" not present in url: "${url}"`)
@@ -145,14 +175,23 @@ function getParamFromUrl(url, paramId) {
     const param = url.substring( startParamValPos, endParamValPos )
     
     return param
+  }
+  catch(errMsg){
+    throw("In getParamFromUrl(url, paramId): " + errMsg)
+  }
 }
 
-function getCurrencySymbol( currencyId ){
+function getCurrencySymbol(currencyId){
+  try {
     let num = 0
     const symbol = num.toLocaleString("en",
                             {style: "currency",
                             currency: currencyId.toUpperCase()}).replace(/\d+([,.]\d+)?/g, "")
     return symbol
+  }
+  catch(errMsg){
+    throw("In getCurrencySymbol(currencyId): " + errMsg)
+  }
 }
 
 
@@ -199,7 +238,7 @@ function checkCookie(cname) {
       return textElement.value
     }
     catch (errMsg){
-      throw("Error caught in decodeHtml(html): Failed to return decoded html: " + errMsg)
+      throw("In decodeHtml(html): Failed to return decoded html: " + errMsg)
     }
   }
 */

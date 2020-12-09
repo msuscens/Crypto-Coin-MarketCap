@@ -22,7 +22,7 @@ let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
 try {
     // Obtain the coin data
-    getTheIndexPageData( defaultCurrency )
+    getTheIndexPageData(defaultCurrency)
     .then (
         (coinData) => {
             theCoins = coinData
@@ -38,7 +38,7 @@ try {
             $("#currencySelectorComponent").html(selectorComponentHtml)
 
 
-            // Create coin search component, adding it onto page
+            // Create and add coin Search Component onto the page
             const coinSearchComponentData = { idSC: "coinSearchComponent",
                                               idSCForm: "coinSearchForm",
                                               idSCInput: "coinSearchInput",
@@ -48,20 +48,15 @@ try {
                                                          suggestions_list_title: "Trending searches:",
                                                          searchPool_list_title: "Top matching coins:"
                                                        },
-                                              searchPool: getAvailableCoins(),
-                                              suggestions : getMostPopularCoinSearches2(),
+                                              searchPool: getAvailableCoinsTEST(),
+                                              suggestions : getMostPopularCoinSearchesTEST2(),
                                               maxItemsInSearchList : 8                                           
                                              }
-            console.log(coinSearchComponentData)
-
             const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
-            
-            console.log(coinSearchComponent)
-
         }  
     )
-} catch (error) {
-    console.log("IndexLogic.js: Something went wrong: " + error)
+} catch (errMsg) {
+    console.log("IndexLogic.js Main code: Something went wrong: " + errMsg)
 }
 
 
@@ -69,7 +64,7 @@ try {
 
 function populateCoinTable(coins) { 
 // Fill the table with coin data
-    
+  try {
     const htmlCoinTableID = $("#myCoinTableBody")
     htmlCoinTableID.html("")
 
@@ -81,12 +76,16 @@ function populateCoinTable(coins) {
 
         htmlCoinTableID.append(coinRowHtmlwithNaNsReplaced)
     })
+  }
+  catch (errMsg) {
+    throw("In populateCoinTable(coins): " + errMsg)
+  }
 }
 
 
 function constructTableRowHtml(coin) {
 // Create and return the HTML string for a coin's table row (using the given coin data)
-
+  try{
     const coinNameLine = `<img src="${coin.image}"border=3 height=25 width=25> ${coin.name} (${coin.symbol})`
 
     const coinRowHtml = `<tr onclick="displayCoinPage(event)" coinid="${coin.id}"> 
@@ -115,12 +114,16 @@ function constructTableRowHtml(coin) {
                             <td>${currency0DP.format(coin.market_cap)}</td>
                         </tr>`
     return coinRowHtml
+  }
+  catch (errMsg) {
+    throw("In constructTableRowHtml(coins): " + errMsg)
+  }
 }
 
 
 function populatePageFooter(coins) {
 // Update the HTML string of the table footer with latest coin data provided.
-
+  try {
     const htmlFooterID = $("#myPageFooter")
     htmlFooterID.html("")
 
@@ -131,13 +134,17 @@ function populatePageFooter(coins) {
                         <p>Last updated: ${lastUpdated}</p>`
 
     htmlFooterID.append(footerHtml)
+  }
+  catch (errMsg) {
+    throw("In populatePageFooter(coins): " + errMsg)
+  }
 }
 
 
 // Event Handlers
 
 function sortTableRows(event) {
-
+  try {
     const currentSortOrder = $(event.target).prop("order")
     let newSortOrder
 
@@ -161,11 +168,14 @@ function sortTableRows(event) {
     // Update the table with newly sorted coin data
     setColumnHeadersSortOrder(event, newSortOrder)
     populateCoinTable(theCoins)
+  }
+  catch (errMsg) {
+    throw("In sortTableRows(event): " + errMsg)
+  }
 }
 
-
 function setColumnHeadersSortOrder(event, newSortOrder) {
-
+  try {
     const unsortedIcon = '<i class="fas fa-sort"></i>'
     const sortedAscendingIcon = '<i class="fas fa-sort-up"></i>'
     const sortedDescendingIcon = '<i class="fas fa-sort-down"></i>'
@@ -178,67 +188,69 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
     // Set 'order' property on table column headings
     $(event.target).prop("order", newSortOrder)
     $(event.target).siblings().removeProp("order")
-
+  }
+  catch (errMsg) {
+    throw("In setColumnHeadersSortOrder(event, newSortOrder): " + errMsg)
+  }
 }
 
 // Event Handler for when user clicks "Sync" button
 function reloadCoinData() {
-    try {
-        const currencyId = $("#currencyLabelCS").text()
+  try {
+    const currencyId = $("#currencyLabelCS").text()
 
-        // Obtain the coin data
-        getTheIndexPageData(currencyId)
-        .then (
-            (coinData) => {
-                theCoins = coinData
+    // Obtain the coin data
+    getTheIndexPageData(currencyId)
+    .then (
+      (coinData) => {
+        theCoins = coinData
                 
-                // Display the coin data on the webpage
-                populateCoinTable(theCoins)
-                populatePageFooter(theCoins)
-            }  
-        )
-    } catch (error) {
-        console.log("In reloadCoinData() EH: Something went wrong: " + error)
-    }
+        // Display the coin data on the webpage
+        populateCoinTable(theCoins)
+        populatePageFooter(theCoins)
+    }) 
+  }
+  catch (errMsg) {
+    throw("In reloadCoinData() event handler: " + errMsg)
+  }
 }
-
 
 // Event Handler for when user clicks a row of the coin table
 function displayCoinPage(event){
-    try {
-        const coinID = event.target.parentNode.attributes.coinid.nodeValue
-        const currencyID = $("#currencyLabelCS").text().toLowerCase()  
+  try {
+    const coinID = event.target.parentNode.attributes.coinid.nodeValue
+    const currencyID = $("#currencyLabelCS").text().toLowerCase()  
 
-        window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
- 
-    } catch (errMsg) {
-        console.log("Something went wrong in IndexLogic: displayCoinPage(event): " + errMsg)
-    }
+    window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
+  }
+  catch (errMsg) {
+    throw("In displayCoinPage(event) event handler: " + errMsg)
+  }
 }
 
 // Event Handler for when user clicks on a currency (in currency selector)
 function changeCurrencyonIndexPage(event){
-    try {
-      // Set the UI's currency selector and applications currency cookie
-      const currencyId = $(event.target).text()
-      $("#currencyLabelCS").text( currencyId )
-      setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
+  try {
+    // Set the UI's currency selector and applications currency cookie
+    const currencyId = $(event.target).text()
+    $("#currencyLabelCS").text( currencyId )
+    setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
 
-      // Update the currency formatters to new currency
-      currency2DP = newCurrencyFormater(currencyId, 2)
-      currency0DP = newCurrencyFormater(currencyId, 0)
+    // Update the currency formatters to new currency
+    currency2DP = newCurrencyFormater(currencyId, 2)
+    currency0DP = newCurrencyFormater(currencyId, 0)
     
-      // Obtain the coin data
-      getTheIndexPageData( currencyId )
-      .then (
-          (coinData) => {
-              theCoins = coinData
-              // Display the coin data on the webpage
-              populateCoinTable( theCoins )
-              populatePageFooter( theCoins )
-            }  
-      )
-    } catch (error) {
-          console.log("In EH changeCurrencyonIndexPage(): Something went wrong: " + error)
-    }
+    // Obtain the coin data
+    getTheIndexPageData( currencyId )
+    .then (
+      (coinData) => {
+        theCoins = coinData
+        // Display the coin data on the webpage
+        populateCoinTable( theCoins )
+        populatePageFooter( theCoins )
+    })
+  }
+  catch (errMsg) {
+    throw("In changeCurrencyonIndexPage(event) event handler: " + errMsg)
+  }
 }

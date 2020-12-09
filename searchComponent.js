@@ -94,8 +94,8 @@
 
 /*  *** Development thoughts - Possible future TODOs
 
-1. This class is too big, refactor to break out a number of smaller supporting classes.
-    Eg. SearchComponent built using additional classes SearchInput, SearchList ...
+1. This class is too big, refactor to break out a number of smaller interacting classes.
+    Eg. Classes for SearchComponent, SearchComponentInput, SearchComponentList ...
 
 2. Question should I replace all jquery in this component? - ie. to make it generally
     usable without jquery!?  Or ensure jQuery is used where-ever for x-browser compatibiity??
@@ -115,7 +115,7 @@
 //
 class SearchComponent {
 
-    constructor( searchComponentData ) {
+    constructor(searchComponentData) {
       try {
         this._data = searchComponentData
         this._searchListItemClicked = false
@@ -124,15 +124,19 @@ class SearchComponent {
         const htmlForListOptions  = this._createListItemHtmlForSearchSuggestions()
         const searchComponentHtml = `<div>
                                         <form id="${this._data.idSCForm}">
-                                          <input id="${this._data.idSCInput}" class="rounded-pill"
+                                          <input id="${this._data.idSCInput}" class="searchInputSC rounded-pill"
                                             type="text" placeholder="${this._data.textSC.input_placeholder}"
                                             title="${this._data.textSC.input_title}">
-                                          <ul id="${this._data.idSCList}" class="searchList shadow d-none"
+                                          <ul id="${this._data.idSCList}" class="searchListSC shadow d-none"
                                               aria-label="${this._data.textSC.suggestions_list_title}"> 
                                             ${htmlForListOptions}
                                           </ul>
                                       </form>
                                     </div>`
+/*  *** TODO : Add search icon into input text box                                 
+        Use method 3 from: https://stackoverflow.com/questions/35821279/positioning-an-image-inside-a-text-input-box/35821416
+        <a href="#"><image src="" <i class="fas fa-search"></i> alt=img style="width:50px; height:50px;"></a>
+*/
         $(`#${this._data.idSC}`).html(searchComponentHtml)
   
         // Add event lisenters to the search component:
@@ -140,7 +144,7 @@ class SearchComponent {
 
       }
       catch (errMsg) {
-        throw ("SearchComponent error in constructor( searchComponentData ): " + errMsg)
+        throw ("Error in SearchComponent: constructor(searchComponentData): " + errMsg)
       }
     }
   
@@ -153,20 +157,20 @@ class SearchComponent {
         return listItemsHtml
       }
       catch (errMsg){
-        throw ("SearchComponent error in _createListItemHtmlForSearchSuggestions(): " + errMsg)
+        throw ("In _createListItemHtmlForSearchSuggestions(): " + errMsg)
       }
     }
   
     _createHtmlForListItem( suggestionOrSearchData, dataIndex ){
-    // ***********    Developer must overide this method by creating SearchComponent subclass.    ***********
-    // The developer should create an inheriting subclass for the application specific implementation,
+    // ********   Developer should overide this method by creating SearchComponent subclass.   ********
+    // The developer to create an inheriting subclass for the application's specific implementation,
     // overidding this superclass method (to return HTML for the application's list item).
     // ************************************************************************************************
       try {
         throw("Method not overriden in subclass, so unable to create application specific list item html.") 
       }
       catch (errMsg){
-        throw ("SearchComponent error _createHtmlForListItem( suggestionOrSearchData, dataIndex ): " + errMsg)
+        throw ("In _createHtmlForListItem(suggestionOrSearchData, dataIndex): " + errMsg)
       }
     }
   
@@ -191,10 +195,12 @@ class SearchComponent {
         this._addClickEventListenerToAllListItems()
       }
       catch (errMsg){
-        throw ("SearchComponent error in _addSearchComponentEventListeners(): " + errMsg)
+        throw ("In _addSearchComponentEventListeners(): " + errMsg)
       }
     }
     
+// *** SearchComponent's Event Listener  *** //
+//
     handleEvent(event) {
       try {    
         switch(event.type) {
@@ -202,16 +208,15 @@ class SearchComponent {
               if (event.target.id == this._data.idSCInput){
                 this._showSearchList()             
               }
-              else { // on list item
+              else { // was 'click' on list item
                 event.preventDefault()
                 this._listItemClickEvent( this, event )
               }
           break
           case "keyup": // in search input box
-              this._searchEngine()
-              // If there's no current user search, switch to suggestions list
-              // Else if there's search input, ensure that search list title is set
-              this._maintainListTypeFromSearchInput()  
+              const inputText = document.getElementById(`${this._data.idSCInput}`).value
+              if ( inputText == "" ) this._createSuggestionsList()
+              else this._updateSearchListResults()
           break
           case "focusout": // of search input box
               this._closeSearchList()
@@ -234,12 +239,12 @@ class SearchComponent {
         }
       }
       catch (errMsg){
-        throw ("SearchComponent error in handleEvent(event): " + errMsg)
+        throw ("SearchComponent Error: In handleEvent(event): " + errMsg)
       }
     }
     
-  // *** SearchComponent's Event processing methods  *** //
-  
+  // *** SearchComponent's Event Processing Methods  *** //
+  //
     _showSearchList(){
       try {
         const searchListId = $(`#${this._data.idSCList}`)
@@ -247,45 +252,49 @@ class SearchComponent {
         searchListId.addClass("d-block")
       }
       catch (errMsg){
-        throw ("SearchComponent error in _showSearchList(): " + errMsg)
+        throw ("In _showSearchList(): " + errMsg)
       }
     }
   
-    _listItemClickEvent( searchComponent, event) {
-    // ***********    This method is should be overridedn by a SearchComponent subclass.    ***********
-    // The developer must create an inheriting subclass for the application specific implemention,
-    // overidding this superclass method in order to return application specific HTML.
-    // Note: Within that sub-class method, after application specific code call this superclass method
-    // in order to reset input and search list
-    // ************************************************************************************************
+    _listItemClickEvent(searchComponent, event) {
+    // ********  This method is should be overridedn by a SearchComponent subclass method.  **********
+    // ***********************************************************************************************
       try{
-        // *** Implementation specic code required (via overiding subclass method).  ***
-        //     (Eg. construct url to take the user to a new page)
+        // *** Implement application specific code to be written in a subclass method, ie.                       ***
+        // *** Overide this method in a Search Component subclass (with a method of same name).    ***
+        // *** Implementation may, for example, construct new page url and then after reseting     ***
+        // *** input & search lists (by calling this superclass method) may load the new page.     ***               ***
 
-        // Reset input and search list (in case user goes 'back' in browser)
+        // Reset input and search list (in case user goes 'back' in browser). [ Note: To be called
+        // from overiding sub-class method by: super._listItemClickEvent(searchComponent, event) ]
         searchComponent._closeSearchList()
         searchComponent._createSuggestionsList()
         document.getElementById( searchComponent._data.idSCInput ).value = ""
         document.getElementById( searchComponent._data.idSCInput ).blur()
     
         // *** Implementation specic code required (via overiding subclass method).  ***
-        //     (Eg. window.location.href = newPageUrl )
+        // *** (Eg. window.location.href = newPageUrl )                              ***
       }
       catch (errMsg){
-        throw ("SearchComponent error in _listItemClickEvent( searchComponent, event): " + errMsg)
+        throw ("In _listItemClickEvent(searchComponent, event): " + errMsg)
       }
     }
   
-    _searchEngine(){
+    _updateSearchListResults(){
       try {
         setTimeout(() => {
           const inputText = document.getElementById(`${this._data.idSCInput}`).value
           const searchList = $(`#${this._data.idSCList}`)
-  
           let numListItemsToAdd = (this._data.maxItemsInSearchList < this._data.searchPool.length) ?
-                                  this._data.maxItemsInSearchList : this._data.searchPool.length             
+                                  this._data.maxItemsInSearchList : this._data.searchPool.length 
+
           searchList.attr("disabled",false) 
-          searchList.html("")    
+          searchList.html("")  
+          
+          // Ensure 'search list' title is set 
+          if (inputText.length == 1) { // List previosuly may have been a 'suggestions list'
+              searchList.attr("aria-label", this._data.textSC.searchPool_list_title)
+          }
   
           // Check each data element to be searched and add matches to list (until full)
           for (let i = 0; (i < this._data.searchPool.length) && (numListItemsToAdd > 0); i++){
@@ -305,28 +314,7 @@ class SearchComponent {
         },300)
       }
       catch (errMsg){
-        throw ("SearchComponent error in _searchEngine(): " + errMsg)
-      }
-    }
-  
-    _maintainListTypeFromSearchInput(){
-    // If there's no search input text: switch to suggestions list, or 
-    // if there's search input: ensure the search list title is set (instead of suggestion list title)
-      try{    
-        const inputText = document.getElementById(`${this._data.idSCInput}`).value
-        const searchList = $(`#${this._data.idSCList}`)
-  
-        // If no search input text, switch to suggestions list 
-        if (inputText == "") { 
-            this._createSuggestionsList()
-            return
-          }
-          else  // Ensure that search list title is set
-            if ( searchList.attr("aria-label") != this._data.textSC.searchPool_list_title )
-              searchList.attr("aria-label", this._data.textSC.searchPool_list_title)
-      }
-      catch (errMsg){
-        throw ("SearchComponent error in _maintainListTypeFromSearchInput(): " + errMsg)
+        throw ("SearchComponent error in _updateSearchListResults(): " + errMsg)
       }
     }
   
@@ -357,7 +345,7 @@ class SearchComponent {
         }
       }
       catch (errMsg){
-        throw ("SearchComponent error in _addClickEventListenerToAllListItems(): " + errMsg)
+        throw ("In _addClickEventListenerToAllListItems(): " + errMsg)
       }
     }
   
@@ -373,7 +361,7 @@ class SearchComponent {
         }
       }
       catch (errMsg){
-        throw ("SearchComponent error in _closeSearchList(): " + errMsg)
+        throw ("In _closeSearchList(): " + errMsg)
       }
     }
   }  // Endof class SearchComponent

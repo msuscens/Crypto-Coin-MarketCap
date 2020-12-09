@@ -52,40 +52,25 @@ const API_ENDPOINTS = {
                                     "&to=" + endUnixTimestamp        
         return (this._BASE_URL + MARKET_CHART_ENDPOINT)
     }
-
-    // *** NOT CURRENTLEY USED  ***
- /*
-    getMarketUrl: function(coinId, currencyCode){
-        const MARKET_ENDPOINT = "/coins/markets?vs_currency=" + currencyCode + "&ids=" + coinId +
-            "&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=7d"
-        return (this._BASE_URL + MARKET_ENDPOINT)
-    }, 
-
-    getHistoryUrl: function( coinId, numDaysAgo ){
-        const startDate = getPreviousDate( numDaysAgo )
-        const HISTORY_DAYS_AGO_ENDPOINT = "/coins/" + coinId + "/history?date=" +
-                                        startDate.getDate() + "-" +
-                                        startDate.getMonth() + "-" +
-                                        startDate.getFullYear() + "&localization=false"
-        return (this._BASE_URL + HISTORY_DAYS_AGO_ENDPOINT)
-    }
-*/
 }
 
 
 // FUNCTIONS FOR OBTAINING THE INDEX (HOME) PAGE DATA
 
 async function getTheIndexPageData(currencyId) {
+  try {
+    const coinsFromCoingeko = await getCoinsFromCoinGeko(currencyId)
 
-    
-  const coinsFromCoingeko = await getCoinsFromCoinGeko(currencyId)
-
-    return collateCoinsListData(coinsFromCoingeko)
+      return collateCoinsListData(coinsFromCoingeko)
+  }
+  catch (errMsg){
+    throw ("Error from InterfaceAPI.js from getTheIndexPageData(currencyId): " + errMsg)
+  }
 }
 
 
 async function getCoinsFromCoinGeko(currencyId) {
-
+  try {
     const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(currencyId)
 
     // Fetch the coins market data, decode into JSON format
@@ -93,12 +78,17 @@ async function getCoinsFromCoinGeko(currencyId) {
     const response = await callUrl.json()
     const data = await response
 
-    // The coin data is now available:
-    return data
+      // The coin data is now available:
+      return data
+  }
+  catch (errMsg){
+    throw ("In getCoinsFromCoinGeko(currencyId): " + errMsg)
+  }
 }
 
 
 function collateCoinsListData(coinDataFromCoingeko) {
+  try {
     // Select relevant data and return this data subset in an object
     // TODO: Add data to object as required by application UI as it is developed (Work-In-Progress)
 
@@ -129,10 +119,15 @@ function collateCoinsListData(coinDataFromCoingeko) {
         myCoinData.push(relevantCoinData)
     }
     return myCoinData
+  }
+  catch (errMsg){
+    throw ("In collateCoinsListData(coinDataFromCoingeko): " + errMsg)
+  }
 }
 
 
 function getSupportedCurrencies(){
+  try {
   // List of supported currencies for the Index (home) page.
       const supportedCurrencies = [
           "btc",
@@ -147,74 +142,89 @@ function getSupportedCurrencies(){
       ]
       return supportedCurrencies
   }
+  catch (errMsg){
+    throw ("In getSupportedCurrencies(): " + errMsg)
+  }
+}
 
   
 // FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
 
 async function getTheCoinPageData(coinCriteria) {
+  try {
+    // Get the external for the Coin page
+    const theCoinPageData = await getExternalDataForCoinPage(coinCriteria)
+    
+      // Add any other data required by the Coin Page
+      theCoinPageData.currency_id = coinCriteria.currencyId.toLowerCase()
 
-    // Get the coin data from CoinGeko API
-    const theCoin = await getSpecificCoinData(coinCriteria)
-        
-        theCoin.currency_id = coinCriteria.currencyId.toLowerCase()
-
-        console.log("In getTheCoinPageData(): theCoin = ", theCoin)
-
-        return theCoin
+      return theCoinPageData
+  }
+  catch (errMsg){
+    throw ("Error from InterfaceAPI.js getTheCoinPageData(coinCriteria): " + errMsg)
+  }
 }
 
-async function getSpecificCoinData(coinCriteria) {
-
-    console.log("Inside getSpecificCoinData()")
-
-    // Get API URLs
+async function getExternalDataForCoinPage(coinCriteria) {
+  try {
+    // Get API URLs (for calls to CoinGeko)
     const urlCoinApi = API_ENDPOINTS.getCoinUrl( coinCriteria )
     const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl( coinCriteria )
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl()
-
-    let coin = {}
+    const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
+    const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
+    
+    let collatedCoinData = {}
 
     // Fetch all the data for the coin (via multiple simulataneous api calls)
     // Await for receipt and decoding of all data (before returning data set)
-    await Promise.all([fetch(urlCoinApi), fetch(urlMarketChartApi), fetch(urlSupportedCurrenciesApi)
-    ]).then(function (responses) {
+    await Promise.all([ fetch(urlCoinApi), fetch(urlMarketChartApi), fetch(urlSupportedCurrenciesApi),
+                        fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi) ]
+    ).then(function (responses) {
 
         // Get a JSON object from each of the two responses (mapping each into an array)
         return Promise.all(responses.map(function (response) {
             return response.json()
         }))
     }).then(function (data) {
-        // Collate the relevant subset of required data
-        console.log("In getSpecificCoinData(): retreived data=", data )
-        coin = collateCoinDataFromCoinGeko(data)
-        console.log("In getSpecificCoinData(): coin = ", coin )
+        // Collate the returned API data into application data for the Coin page
+        collatedCoinData = collateCoinDataFromCoinGeko(data)
     })
-    .catch(function (error) {
-        console.log("Error in getSpecificCoinData():", error)
+    .catch(function (errMsg) {
+        throw("Error in getExternalDataForCoinPage(coinCriteria): " + errMsg)
     })
 
-    return coin
+    return collatedCoinData
+  }
+  catch (errMsg){
+    throw ("In getExternalDataForCoinPage(coinCriteria): " + errMsg)
+  }
 }
 
-function collateCoinDataFromCoinGeko( rawData ){
+function collateCoinDataFromCoinGeko(rawData){
+  try {
     // Select relevant data and return this data subset in an object
-    console.log("Inside collateCoinDataFromCoinGeko(rawData): rawData =", rawData)
+    //  *** For now take all data provided - ie. do nothing!
 
     // Collate all API returned datasets into single object
     const coinInfo =  { ... preprocessCoinApiReturn( rawData[0], rawData[2] ),
-                        ... prepareGraphDataFromMarketChart( rawData[1] )
+                        ... preparePriceGraphData( rawData[1] ),
+                        ... preprocessAllCoinsList( rawData[3] ),
+                        ... preprocessTrendingCoinSearchesList( rawData[4] )
                       }
-
-    console.log("Inside collateCoinGeko(rawData):About to return collated coinInfo object = ", coinInfo)
-
     return coinInfo
+  }
+  catch (errMsg){
+    throw ("In collateCoinDataFromCoinGeko(rawData): " + errMsg)
+  }
 }
 
+// FUNCTIONS TO COLLATE & AUGMENT COINGEKO API RETURN DATA INTO APPLICATIONS DATASTRUCTURE FORMAT
 
-function preprocessCoinApiReturn( data, currencies ){
-
-    // For now, take all the data unproceessed
-    let coin = data   
+function preprocessCoinApiReturn(coinFromCoinGeko, currencies){
+  try {
+    // For now, take all the coin data unproceessed
+    let coin = coinFromCoinGeko   
     coin.market_data.currencies_supported = currencies
 
     // Remove unwanted data - only if not willing to keep in our data object
@@ -265,23 +275,73 @@ function preprocessCoinApiReturn( data, currencies ){
         // market_cap_change_percentage_24h_in_currency[currency]
     }
     
+    // Set fallback value (to NaN) on other (non-currency dependent) statistics
+    if ( !Number.isFinite( coin.sentiment_votes_down_percentage ) ){
+      coin.sentiment_votes_down_percentage = NaN
+    }
+    if ( !Number.isFinite( coin.sentiment_votes_up_percentage ) ){
+      coin.sentiment_votes_up_percentage = NaN
+    }
+
     return coin
+  }
+  catch (errMsg){
+    throw ("In preprocessCoinApiReturn(data, currencies): " + errMsg)
+  }
+}
+
+
+function preprocessAllCoinsList(allCoinsFromCoinGeko) {
+  try {
+    const coinList = { all_the_coins : [] }
+
+    $.each(allCoinsFromCoinGeko, function (index, coin) {
+      // Add a nameline (to support future display and coin search)
+      coin.nameLine = `${coin.name} (${coin.symbol})`
+      coinList.all_the_coins[index] = coin
+    })
+
+    return coinList
+  }
+  catch (errMsg){
+    throw ("In preprocessAllCoinsList(data): " + errMsg)
+  }
+}
+
+function preprocessTrendingCoinSearchesList(trendingSearchesFromCoinGeko) {
+  try {
+    const trendingCoinList = { trending_coin_searches : [] } 
+
+    $.each(trendingSearchesFromCoinGeko.coins, function (index, coin) {
+      // Removing 'item' level object (that holds each data object with coin details)
+      coin = coin.item
+
+      // Add a nameline (to support future display)
+      coin.nameLine = `${coin.name} (${coin.symbol})`
+
+      trendingCoinList.trending_coin_searches[index] = coin
+    })
+
+    return trendingCoinList
+  }
+  catch (errMsg){
+    throw ("In preprocessTrendingCoinSearchesList(trendingSearchesFromCoinGeko): " + errMsg)
+  }
 }
 
 
 // FUNCTIONS FOR THE PRICE CHART DATA
 
-function prepareGraphDataFromMarketChart ( data ){
-
+function preparePriceGraphData(marketChartDataFromCoinGeko) {
+  try {
     const graphData = {
         price_graph: {
             xs: [],
             ys: []
         }
     }
- 
     // Obtain x & y data points (of dates & prices)
-    const pricesTable = [data.prices]
+    const pricesTable = [marketChartDataFromCoinGeko.prices]
 
     pricesTable[0].forEach(row => {
         const date = new Date(row[0])
@@ -291,11 +351,15 @@ function prepareGraphDataFromMarketChart ( data ){
     })
     
     return graphData
+  }
+  catch (errMsg){
+    throw ("In preparePriceGraphData(marketChartDataFromCoinGeko): " + errMsg)
+  }
 }
 
 
 async function getCoinGraphData(coinCriteria) {
-
+  try {
     const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(coinCriteria)
 
     // Fetch the market data, decode into JSON format
@@ -307,12 +371,16 @@ async function getCoinGraphData(coinCriteria) {
     const graphData = prepareGraphDataFromMarketChart( data )
 
     return graphData
+  }
+  catch (errMsg){
+    throw ("In getCoinGraphData(coinCriteria): " + errMsg)
+  }
 }
 
 
-// FUNCTIONS TO PROVIDE THE SEARCH COMPONENT DATA
+// FUNCTIONS TO PROVIDE HARDCODED TEST DATA FOR THE DEVELOPMENT OF THE SEARCH COMPONENT
 
-function getAvailableCoins() {
+function getAvailableCoinsTEST() {
 // Hardcoded Test Data
 // Extract from data return from: https://api.coingecko.com/api/v3/coins/list
 
@@ -411,7 +479,7 @@ function getAvailableCoins() {
     return allCoins
 }
 
-function getMostPopularCoinSearches() {
+function getMostPopularCoinSearchesTEST() {
 // Hardcoded Test Data 
 // Data return from: https://api.coingecko.com/api/v3/search/trending
 
@@ -509,7 +577,7 @@ function getMostPopularCoinSearches() {
 }
 
 
-function getMostPopularCoinSearches2() {
+function getMostPopularCoinSearchesTEST2() {
   // Hardcoded Test Data 
   // Data return from: https://api.coingecko.com/api/v3/search/trending
   

@@ -25,12 +25,11 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
     // Obtain the coin data
     getTheCoinPageData( coinCriteria )
     .then (
-        (coinData) => {
-            theCoinPageData = coinData
+        (theCoinPageData) => {
 
             console.log("Returned from getCoinPageData: theCoinPageData = ", theCoinPageData)
 
-        // Display the data on the coin page, section by section        
+            // Display the data on the coin page, section by section        
             displayCoinHeader( theCoinPageData )
 
             const priceGraphCriteria = setPriceGraphCriteria( theCoinPageData )
@@ -41,31 +40,52 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
             displayDescription( theCoinPageData )
             displayFooter( theCoinPageData )
 
-            // Put the currency selector component onto the page (with all supported currencies)
+            // Put the currency selector component onto the page
             const componentHtml = createCurrencySelectorDropDownHtml(
                                     theCoinPageData.market_data.currencies_supported,
                                     theCoinPageData.currency_id, "changeCurrencyOnCoinPage(event)")
             $("#currencySelectorComponent2").html(componentHtml)
+
+            // Create and add coin Search Component onto the page
+            const coinSearchComponentData = { idSC: "coinSearchComponent",
+                                              idSCForm: "coinSearchForm",
+                                              idSCInput: "coinSearchInput",
+                                              idSCList: "coinSearchList",
+                                              textSC: { input_title: "Type in a coin name or id",
+                                                         input_placeholder: "Search for a coin...",
+                                                         suggestions_list_title: "Trending searches:",
+                                                         searchPool_list_title: "Top matching coins:"
+                                                      },
+                                              searchPool: theCoinPageData.all_the_coins,
+                                              suggestions: theCoinPageData.trending_coin_searches,
+                                              maxItemsInSearchList: 8                                           
+                                             }
+            const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
         }  
     )
-} catch (error) {
-    console.log("Something went wrong: " + error)
+} catch (errMsg) {
+    console.log("Something went wrong in CoinLogic.js: " + errMsg)
 }
 
 
 // Initialise date picker (for coin price graph's start date)
 $(function () {
+  try {
     $("#myDatepicker").datepicker({
         dateFormat: "yy-mm-dd", defaultDate: `-${graphStartDaysAgo}d`,
         maxDate: "-5d", minDate: new Date(2010, 1 - 1, 1),
         yearRange: "2010:c"
     })
     $("#myDatepicker").datepicker("setDate", `-${graphStartDaysAgo}d`)
+  }
+  catch (errMsg) {
+    throw("In Initialise date picker: " + errMsg)
+  }
 })
 
 
 function displayCoinHeader(coin) {
-
+  try {
     // Display the basic coin data
     const coinNameLine = `<img src="${coin.image.large}" border=3 height=50 width=50>
                             <big><strong> &nbsp ${coin.name}</strong></big> (${coin.symbol.toUpperCase()})`
@@ -77,11 +97,15 @@ function displayCoinHeader(coin) {
     $("#mcRank").html(coin.market_cap_rank)
     $("#priceLine").html(coinPriceLine)
     $("#priceInBtcLine").html(coinBtcPriceLine)
+  }
+  catch (errMsg){
+    throw ("In displayCoinHeader(coin): " + errMsg)
+  }
 }
 
 
 function displayPriceStats(coin) {
-
+  try {
     const price1hrLine = getPriceChangeHtml(coin, "coin.market_data.price_change_percentage_1h_in_currency")
     const price24hrLine = getPriceChangeHtml(coin, "coin.market_data.price_change_percentage_24h_in_currency")
     const price7dLine = getPriceChangeHtml(coin, "coin.market_data.price_change_percentage_7d_in_currency")
@@ -107,11 +131,16 @@ function displayPriceStats(coin) {
     $("#priceATL").html( priceATLLine )
     $("#priceATH").html( priceATHLine )
     $("#priceSentiment").html( priceSentimentlLine )
+  }
+  catch (errMsg){
+    throw ("In displayPriceStats(coin): " + errMsg)
+  }
 }
 
 
-function getPriceChangeHtml( coin, baseAttribute )
+function getPriceChangeHtml(coin, baseAttribute)
 {
+  try {
     const percentageChangeInCurrency = eval(`${baseAttribute}.${coin.currency_id}`)
     const percentageChangeInBtc = eval(`${baseAttribute}.btc`)
 
@@ -126,11 +155,16 @@ function getPriceChangeHtml( coin, baseAttribute )
     const priceChangeHtmlwithNaNsReplaced = priceChangeHtml.replace(/NaN/g, "-")
     
     return priceChangeHtmlwithNaNsReplaced
+  }
+  catch (errMsg){
+    throw ("In getPriceChangeHtml(coin, baseAttribute): " + errMsg)
+  }    
 }
 
 
-function getPrice24hrLowHighHtml( coin )
+function getPrice24hrLowHighHtml(coin)
 {
+  try {
     const price24hrLowInCurrency = coin.market_data.low_24h[ coin.currency_id ]
     const price24hrHighInCurrency = coin.market_data.high_24h[ coin.currency_id ]
 
@@ -139,11 +173,16 @@ function getPrice24hrLowHighHtml( coin )
                                 24hr Low : <span style="color:red">
                                     ${currency2DP.format(price24hrLowInCurrency)}</span>`
     return price24hrLowHighHtml
+  }
+  catch (errMsg){
+    throw ("In getPrice24hrLowHighHtml(coin): " + errMsg)
+  }
 }
 
 
-function getPriceAllTimeHtml( coin, highOrLow )
+function getPriceAllTimeHtml(coin, highOrLow)
 {
+  try {
     const priceATInCurrency = eval(`coin.market_data.${highOrLow}.${coin.currency_id}`)
     const priceATInBtc = eval(`coin.market_data.${highOrLow}.btc`)
 
@@ -164,11 +203,16 @@ function getPriceAllTimeHtml( coin, highOrLow )
             <small> ${priceATDateForBtc.slice(0, 10)}</small>`
 
     return priceAllTimeHtml
+  }
+  catch (errMsg){
+    throw ("In getPriceAllTimeHtml(coin, highOrLow): " + errMsg)
+  }
 }
 
 
-function getPriceSentimentHtml( coin )
+function getPriceSentimentHtml(coin)
 {
+  try {
     const votesDownPercentage = coin.sentiment_votes_down_percentage
     const votesUpPercentage = coin.sentiment_votes_up_percentage
 
@@ -177,12 +221,19 @@ function getPriceSentimentHtml( coin )
             &nbsp (votes) &nbsp &nbsp <span style="color:green">
             <i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}%</span>`
 
-    return priceSentimentHtml
+    // Set display character if missing vote numbers                  
+    const priceSentimentHtmlwithNaNsReplaced = priceSentimentHtml.replace(/NaN/g, "-")
+
+    return priceSentimentHtmlwithNaNsReplaced
+  }
+  catch (errMsg){
+    throw ("In getPriceSentimentHtml(coin): " + errMsg)
+  }
 }
 
 
 function displayMarketStats(coin) {
-
+  try {
     const marketCapInCurrency = coin.market_data.market_cap[coin.currency_id]
     const marketCapLine = `${currency0DP.format(marketCapInCurrency)} ${coin.currency_id.toUpperCase()}`
     const marketCapInBtcLine = `<span>&#x20bf</span>${coin.market_data.market_cap.btc.toLocaleString()} BTC`
@@ -202,20 +253,32 @@ function displayMarketStats(coin) {
 
     $("#marketCapInBtc").html( marketCapInBtcLine ) 
     $("#totalVolumeInBtc").html( totalVolumeInBtcLine ) 
+  }
+  catch (errMsg){
+    throw ("In displayMarketStats(coin): " + errMsg)
+  }
 }
 
 
 function displayDescription(coin) {
-
+  try {
     const coinDescriptionLine = `<p>${coin.description.en}</p>`
     $("#coinDescription").html( coinDescriptionLine )
+  }
+  catch (errMsg){
+    throw ("In displayDescription(coin): " + errMsg)
+  }
 }
 
 
 function displayFooter(coin) {
-
+  try {
     const footerHtml = `<p>Last updated: ${coin.last_updated}<p/>`
-    $("#coinPageFooter").html( footerHtml ) 
+    $("#coinPageFooter").html( footerHtml )
+  }
+  catch (errMsg){
+    throw ("In displayFooter(coin): " + errMsg)
+  }
 }
 
 
@@ -236,14 +299,15 @@ $("#myShowChartButton").click(async function () {
         const priceGraphCriteria = setPriceGraphCriteria(theCoinPageData)
         displayGraph( priceGraphCriteria )
 
-    } catch (error) {
-        console.log("Something went wrong in EH: " + error)
+    }
+    catch (errMsg) {
+        throw("In event handler: $('#myShowChartButton').click(async function ( ... ): " + errMsg)
     }
 })
 
 
-function setPriceGraphCriteria( coin ){
-
+function setPriceGraphCriteria(coin){
+  try {
     const startDate = $("#myDatepicker").datepicker("getDate");
     const graph = {
         coinName: coin.name,
@@ -261,11 +325,16 @@ function setPriceGraphCriteria( coin ){
         borderWidth: 1
     }
     return graph
+  }
+  catch (errMsg) {
+    throw("In setPriceGraphCriteria(coin): " + errMsg)
+  }
 }
 
 
-function displayGraph( graph ){
-// Create and display the coin price chart
+function displayGraph(graph) {
+  try {
+    // Create and display the coin price chart
     const ctx = document.getElementById('myChart').getContext('2d');
     const myChart = new Chart(ctx, {
             type: graph.type,
@@ -292,6 +361,10 @@ function displayGraph( graph ){
                 }
             }
         });
+  }
+  catch (errMsg) {
+    throw("In displayGraph(graph): " + errMsg)
+  }
 }
 
 
@@ -326,8 +399,8 @@ function changeCurrencyOnCoinPage(event){
         displayCoinHeader( theCoinPageData )
         displayPriceStats( theCoinPageData )
         displayMarketStats( theCoinPageData )
-
-    } catch (error) {
-          console.log("In EH changeCurrencyOnCoinPage(): Something went wrong: " + error)
+    }
+    catch (errMsg) {
+      throw("In EH changeCurrencyOnCoinPage(): " + errMsg)
     }
   }
