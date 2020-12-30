@@ -8,21 +8,30 @@
 
 // Global - data for the page
 const fallbackCurrency = "usd"
-let theCoins = []   // Array of coin data (yet to be obtained)
+let theCoins = []   // Array of coin data for table (yet to be obtained) 
 
 // Use cookie for default currency
-let defaultCurrency
+let defaultCurrency = null
 if ( checkCookie(currencyCookie) == true ) defaultCurrency = getCookie(currencyCookie)
 else defaultCurrency = fallbackCurrency
 setCookie(currencyCookie, defaultCurrency, cookieDurationInSeconds) // set or refresh cookie
+
+// Table meta data
+const coinTableCriteria = {
+  currencyId: defaultCurrency.toLowerCase(),
+  numberCoinsPerPage: 100,
+  currentPageNumber: 1
+}
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
 let currency2DP = newCurrencyFormater(defaultCurrency, 2)
 let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
+
 try {
     // Obtain the coin data
-    getTheIndexPageData(defaultCurrency)
+//    getTheIndexPageData(defaultCurrency)
+    getTheIndexPageData(coinTableCriteria)
     .then (
         (coinData) => {
             theCoins = coinData
@@ -143,6 +152,48 @@ function populatePageFooter(coins) {
 
 // Event Handlers
 
+function pagePreviousCoins() {
+  try {
+    coinTableCriteria.currentPageNumber--
+
+    //  If moving back to first page of table, de-activate 'previous' paging control
+    if ( coinTableCriteria.currentPageNumber <= 1 ) {
+      $('li[name="previousPageTableControl"]').addClass("disabled")
+      $('li[name="previousPageTableControl"]').attr("tabindex", "-1")
+    }
+
+    // If moving back from last possible page of table, re-activate 'Next' paging control
+    // *** TODO Later - Nice to have (as page still functions without it)  ***
+
+    // Display previous page of coins in table
+    reloadCoinData()
+  }
+  catch (errMsg) {
+    throw("In pagePreviousCoins(): " + errMsg)
+  }
+}
+
+function pageNextCoins() {
+  try {
+    coinTableCriteria.currentPageNumber++
+
+    //  If moving on to second page of table, re-activate 'Previous' paging control
+    if (coinTableCriteria.currentPageNumber == 2) {
+      $('li[name="previousPageTableControl"]').removeClass("disabled")
+      $('li[name="previousPageTableControl"]').attr("tabindex", "0")
+    }
+
+    // If moving on to last possible page of table, de-activate 'Next' paging control
+    // *** TODO Later - Nice to have (as page still functions without it)  ***
+
+    // Display next page of coins in table
+    reloadCoinData()
+  }
+  catch (errMsg) {
+    throw("In pageNextCoins(): " + errMsg)
+  }
+}
+
 function sortTableRows(event) {
   try {
     const currentSortOrder = $(event.target).prop("order")
@@ -200,7 +251,8 @@ function reloadCoinData() {
     const currencyId = $("#currencyLabelCS").text()
 
     // Obtain the coin data
-    getTheIndexPageData(currencyId)
+//    getTheIndexPageData(currencyId)
+    getTheIndexPageData(coinTableCriteria)
     .then (
       (coinData) => {
         theCoins = coinData
@@ -240,8 +292,9 @@ function changeCurrencyonIndexPage(event){
     currency2DP = newCurrencyFormater(currencyId, 2)
     currency0DP = newCurrencyFormater(currencyId, 0)
     
-    // Obtain the coin data
-    getTheIndexPageData( currencyId )
+    // Obtain the coin data in new currency
+    coinTableCriteria.currencyId = currencyId
+    getTheIndexPageData( coinTableCriteria )
     .then (
       (coinData) => {
         theCoins = coinData

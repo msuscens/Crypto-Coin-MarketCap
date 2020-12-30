@@ -26,9 +26,10 @@ const API_ENDPOINTS = {
       return (this._BASE_URL + TRENDING_SEARCHES_ENDPOINT)
     },
 
-    getCoinsMarketUrl: function(currencyId) {
-        const COINS_MARKET_ENDPOINT = "/coins/markets?vs_currency=" + currencyId.toLowerCase() +
-            "&order=market_cap_desc&per_page=100&page=1&sparkline=false" +
+    getCoinsMarketUrl: function(criteria) {
+        const COINS_MARKET_ENDPOINT = "/coins/markets?vs_currency=" + criteria.currencyId +
+            "&order=market_cap_desc&per_page=" + criteria.numberCoinsPerPage +
+            "&page=" + criteria.currentPageNumber + "&sparkline=false" +
             "&price_change_percentage=1h%2C24h%2C7d%2C14d%2C30d%2C200d%2C1y"
         return (this._BASE_URL + COINS_MARKET_ENDPOINT)
     },
@@ -57,9 +58,10 @@ const API_ENDPOINTS = {
 
 // FUNCTIONS FOR OBTAINING THE INDEX (HOME) PAGE DATA
 
-async function getTheIndexPageData(currencyId) {
+async function getTheIndexPageData(coinTableCriteria) {
+
   try {
-    const coinsFromCoingeko = await getCoinsFromCoinGeko(currencyId)
+    const coinsFromCoingeko = await getCoinsFromCoinGeko(coinTableCriteria)
 
       return collateCoinsListData(coinsFromCoingeko)
   }
@@ -69,9 +71,9 @@ async function getTheIndexPageData(currencyId) {
 }
 
 
-async function getCoinsFromCoinGeko(currencyId) {
+async function getCoinsFromCoinGeko(criteria) {
   try {
-    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(currencyId)
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(criteria)
 
     // Fetch the coins market data, decode into JSON format
     const callUrl = await fetch(urlCoinsMarketApi)
@@ -152,7 +154,7 @@ function getSupportedCurrencies(){
 
 async function getTheCoinPageData(coinCriteria) {
   try {
-    // Get the external for the Coin page
+    // Get the external datafor the Coin page
     const theCoinPageData = await getExternalDataForCoinPage(coinCriteria)
     
       // Add any other data required by the Coin Page
