@@ -58,42 +58,74 @@ const API_ENDPOINTS = {
 
 // FUNCTIONS FOR OBTAINING THE INDEX (HOME) PAGE DATA
 
-async function getTheIndexPageData(coinTableCriteria) {
-
+async function getTheIndexPageData(coinCriteria) {
   try {
-    const coinsFromCoingeko = await getCoinsFromCoinGeko(coinTableCriteria)
+    // Get the external datafor the Coin page
+    const indexPage = await getExternalDataForIndexPage(coinCriteria)
 
-      return collateCoinsListData(coinsFromCoingeko)
+    // Any other data required by page: Add to indexPage object 
+    // *** None required at present ***
+
+    return indexPage
   }
   catch (errMsg){
-    throw ("Error from InterfaceAPI.js from getTheIndexPageData(currencyId): " + errMsg)
+    throw ("Error from InterfaceAPI.js getTheIndexPageData(coinCriteria): " + errMsg)
   }
 }
 
-
-async function getCoinsFromCoinGeko(criteria) {
+async function getExternalDataForIndexPage(coinCriteria) {
   try {
-    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(criteria)
+    // Get API URLs (for calls to CoinGeko), for ...
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinCriteria)     
+    const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl() 
+    const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
+    const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
+    
+    let indexPageData = {}
 
-    // Fetch the coins market data, decode into JSON format
-    const callUrl = await fetch(urlCoinsMarketApi)
-    const response = await callUrl.json()
-    const data = await response
+    // Fetch all the data (via multiple simulataneous api calls)
+    // Await for receipt and decoding of all data (before returning data set)
+    await Promise.all([ fetch(urlCoinsMarketApi), fetch(urlSupportedCurrenciesApi),
+                        fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi) ]
+    ).then(function (responses) {
 
-      // The coin data is now available:
-      return data
+        // Get a JSON object from all the responses (mapping each into an array)
+        return Promise.all(responses.map(function (response) {
+            return response.json()
+        }))
+    }).then(function (data) {
+        // Preprocess and collate data
+        indexPageData = collateIndexPage(data)
+    })
+    .catch(function (errMsg) {
+        throw("Error in getExternalDataForIndexPage(coinCriteria): " + errMsg)
+    })
+
+    return indexPageData
   }
   catch (errMsg){
-    throw ("In getCoinsFromCoinGeko(currencyId): " + errMsg)
+    throw ("In getExternalDataForIndexPage(coinCriteria): " + errMsg)
   }
 }
 
-
-function collateCoinsListData(coinDataFromCoingeko) {
+function collateIndexPage(rawCoinGekoData){
   try {
-    // Select relevant data and return this data subset in an object
-    // TODO: Add data to object as required by application UI as it is developed (Work-In-Progress)
+    // Prepare and collate data required by index page
+    const indexPageData = { ... prepareCoinTable(rawCoinGekoData[0]),
+                            ... prepareListOfSupportedCurrencies(rawCoinGekoData[1]),
+                            ... prepareListOfAllCoins(rawCoinGekoData[2]),
+                            ... prepareListOfTrendingCoinSearches(rawCoinGekoData[3])
+                          }
+    return indexPageData
+  }
+  catch (errMsg){
+    throw ("In collateIndexPage(rawCoinGekoData): " + errMsg)
+  }
+}
 
+function prepareCoinTable(coinDataFromCoingeko) {
+  try {
+    // Select relevant data, adding fallback values for missing data
     let myCoinData = []
     for (let coin of coinDataFromCoingeko) {
         let relevantCoinData = {
@@ -120,47 +152,90 @@ function collateCoinsListData(coinDataFromCoingeko) {
         }
         myCoinData.push(relevantCoinData)
     }
-    return myCoinData
+    return {"coins": myCoinData}
   }
   catch (errMsg){
-    throw ("In collateCoinsListData(coinDataFromCoingeko): " + errMsg)
+    throw ("In prepareCoinTable(coinDataFromCoingeko): " + errMsg)
   }
 }
 
-
-function getSupportedCurrencies(){
+function prepareListOfSupportedCurrencies(currencies) {
   try {
-  // List of supported currencies for the Index (home) page.
-      const supportedCurrencies = [
-          "btc",
-          "eth",
-          "usd",
-          "chf",
-          "eur",
-          "gbp",
-          "hkd",
-          "jpy",
-          "cny"
-      ]
-      return supportedCurrencies
+    // No preprocessing of list at present, so return all currencies
+    return {"currencies_supported": currencies}
   }
   catch (errMsg){
-    throw ("In getSupportedCurrencies(): " + errMsg)
+    throw ("In prepareListOfSupportedCurrencies(currencies): " + errMsg)
   }
 }
 
-  
+function prepareListOfAllCoins(allCoinsFromCoinGeko) {
+  try {
+    const coinList = { all_the_coins : [] }
+
+    $.each(allCoinsFromCoinGeko, function (index, coin) {
+      // Add a nameline (to support future display and coin search)
+      coin.nameLine = `${coin.name} (${coin.symbol})`
+      coinList.all_the_coins[index] = coin
+    })
+
+    return coinList
+  }
+  catch (errMsg){
+    throw ("In prepareListOfAllCoins(data): " + errMsg)
+  }
+}
+
+function prepareListOfTrendingCoinSearches(trendingSearchesFromCoinGeko) {
+  try {
+    const trendingCoinList = { trending_coin_searches : [] } 
+
+    $.each(trendingSearchesFromCoinGeko.coins, function (index, coin) {
+      // Removing 'item' level object (that holds each data object with coin details)
+      coin = coin.item
+
+      // Add a nameline (to support future display)
+      coin.nameLine = `${coin.name} (${coin.symbol})`
+
+      trendingCoinList.trending_coin_searches[index] = coin
+    })
+
+    return trendingCoinList
+  }
+  catch (errMsg){
+    throw ("In prepareListOfTrendingCoinSearches(trendingSearchesFromCoinGeko): " + errMsg)
+  }
+}
+
+
+async function getCoinTableData(coinCriteria) {
+  try {
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinCriteria)
+
+    // Fetch the coin data
+    const callUrl = await fetch(urlCoinsMarketApi)
+    const response = await callUrl.json()
+    const data = await response
+
+    return prepareCoinTable( data )
+  }
+  catch (errMsg){
+    throw ("In getCoinTableData(coinCriteria): " + errMsg)
+  }
+}
+
+
 // FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
 
 async function getTheCoinPageData(coinCriteria) {
   try {
     // Get the external datafor the Coin page
-    const theCoinPageData = await getExternalDataForCoinPage(coinCriteria)
+    const coinPage = await getExternalDataForCoinPage(coinCriteria)
     
-      // Add any other data required by the Coin Page
-      theCoinPageData.currency_id = coinCriteria.currencyId.toLowerCase()
+    // Add any other data required by the Coin Page
+    coinPage.currency_id = coinCriteria.currencyId.toLowerCase()
 
-      return theCoinPageData
+    return coinPage
   }
   catch (errMsg){
     throw ("Error from InterfaceAPI.js getTheCoinPageData(coinCriteria): " + errMsg)
@@ -176,54 +251,52 @@ async function getExternalDataForCoinPage(coinCriteria) {
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
     
-    let collatedCoinData = {}
+    let coinPageData = {}
 
-    // Fetch all the data for the coin (via multiple simulataneous api calls)
+    // Fetch all the data (via multiple simulataneous api calls)
     // Await for receipt and decoding of all data (before returning data set)
     await Promise.all([ fetch(urlCoinApi), fetch(urlMarketChartApi), fetch(urlSupportedCurrenciesApi),
                         fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi) ]
     ).then(function (responses) {
 
-        // Get a JSON object from each of the two responses (mapping each into an array)
+        // Get a JSON object from all responses (mapping each into an array)
         return Promise.all(responses.map(function (response) {
             return response.json()
         }))
     }).then(function (data) {
-        // Collate the returned API data into application data for the Coin page
-        collatedCoinData = collateCoinDataFromCoinGeko(data)
+        // Preprocess and collate returned API data (so that its ready for use by Coin page)
+        coinPageData = collateCoinPage(data)
     })
     .catch(function (errMsg) {
         throw("Error in getExternalDataForCoinPage(coinCriteria): " + errMsg)
     })
 
-    return collatedCoinData
+    return coinPageData
   }
   catch (errMsg){
     throw ("In getExternalDataForCoinPage(coinCriteria): " + errMsg)
   }
 }
 
-function collateCoinDataFromCoinGeko(rawData){
-  try {
-    // Select relevant data and return this data subset in an object
-    //  *** For now take all data provided - ie. do nothing!
 
-    // Collate all API returned datasets into single object
-    const coinInfo =  { ... preprocessCoinApiReturn( rawData[0], rawData[2] ),
-                        ... preparePriceGraphData( rawData[1] ),
-                        ... preprocessAllCoinsList( rawData[3] ),
-                        ... preprocessTrendingCoinSearchesList( rawData[4] )
-                      }
-    return coinInfo
+function collateCoinPage(rawCoinGekoData){
+  try {
+    // Prepare and collate data required by the Coin page
+    const coinPageData =  { ... prepareCoinInformation(rawCoinGekoData[0], rawCoinGekoData[2]),
+                            ... preparePriceGraph(rawCoinGekoData[1]),
+                            ... prepareListOfAllCoins(rawCoinGekoData[3]),
+                            ... prepareListOfTrendingCoinSearches(rawCoinGekoData[4])
+                          }
+    return coinPageData
   }
   catch (errMsg){
-    throw ("In collateCoinDataFromCoinGeko(rawData): " + errMsg)
+    throw ("In collateCoinPage(rawCoinGekoData): " + errMsg)
   }
 }
 
 // FUNCTIONS TO COLLATE & AUGMENT COINGEKO API RETURN DATA INTO APPLICATIONS DATASTRUCTURE FORMAT
 
-function preprocessCoinApiReturn(coinFromCoinGeko, currencies){
+function prepareCoinInformation(coinFromCoinGeko, currencies){
   try {
     // For now, take all the coin data unproceessed
     let coin = coinFromCoinGeko   
@@ -240,7 +313,6 @@ function preprocessCoinApiReturn(coinFromCoinGeko, currencies){
     if (!coin.image.large) coin.image.large = ""   //  Use "//:0" or add default image?
 
     if ( !Number.isFinite( coin.market_data.max_supply ) ) coin.market_data.max_supply = NaN
-
 
     // Set fallback value (to NaN) on each key property with missing currency values
     for (let currency of currencies){
@@ -270,11 +342,11 @@ function preprocessCoinApiReturn(coinFromCoinGeko, currencies){
         }
 
         // Add others here as necessary: EG.
-        // current_price[currency], atl[currency], ath[currency], ath_change_percentage[currency],
-        // atl_change_percentage[currency], market_cap[currency], fully_diluted_valuation[currency],
-        // total_volume[currency], low_24hr[currency], high_24hr[currency],
-        // market_cap_change_24h_in_currency[currency],
-        // market_cap_change_percentage_24h_in_currency[currency]
+          // current_price[currency], atl[currency], ath[currency], ath_change_percentage[currency],
+          // atl_change_percentage[currency], market_cap[currency], fully_diluted_valuation[currency],
+          // total_volume[currency], low_24hr[currency], high_24hr[currency],
+          // market_cap_change_24h_in_currency[currency],
+          // market_cap_change_percentage_24h_in_currency[currency]
     }
     
     // Set fallback value (to NaN) on other (non-currency dependent) statistics
@@ -288,53 +360,14 @@ function preprocessCoinApiReturn(coinFromCoinGeko, currencies){
     return coin
   }
   catch (errMsg){
-    throw ("In preprocessCoinApiReturn(data, currencies): " + errMsg)
-  }
-}
-
-
-function preprocessAllCoinsList(allCoinsFromCoinGeko) {
-  try {
-    const coinList = { all_the_coins : [] }
-
-    $.each(allCoinsFromCoinGeko, function (index, coin) {
-      // Add a nameline (to support future display and coin search)
-      coin.nameLine = `${coin.name} (${coin.symbol})`
-      coinList.all_the_coins[index] = coin
-    })
-
-    return coinList
-  }
-  catch (errMsg){
-    throw ("In preprocessAllCoinsList(data): " + errMsg)
-  }
-}
-
-function preprocessTrendingCoinSearchesList(trendingSearchesFromCoinGeko) {
-  try {
-    const trendingCoinList = { trending_coin_searches : [] } 
-
-    $.each(trendingSearchesFromCoinGeko.coins, function (index, coin) {
-      // Removing 'item' level object (that holds each data object with coin details)
-      coin = coin.item
-
-      // Add a nameline (to support future display)
-      coin.nameLine = `${coin.name} (${coin.symbol})`
-
-      trendingCoinList.trending_coin_searches[index] = coin
-    })
-
-    return trendingCoinList
-  }
-  catch (errMsg){
-    throw ("In preprocessTrendingCoinSearchesList(trendingSearchesFromCoinGeko): " + errMsg)
+    throw ("In prepareCoinInformation(coinFromCoinGeko): " + errMsg)
   }
 }
 
 
 // FUNCTIONS FOR THE PRICE CHART DATA
 
-function preparePriceGraphData(marketChartDataFromCoinGeko) {
+function preparePriceGraph(marketChartDataFromCoinGeko) {
   try {
     const graphData = {
         price_graph: {
@@ -355,10 +388,9 @@ function preparePriceGraphData(marketChartDataFromCoinGeko) {
     return graphData
   }
   catch (errMsg){
-    throw ("In preparePriceGraphData(marketChartDataFromCoinGeko): " + errMsg)
+    throw ("In preparePriceGraph(marketChartDataFromCoinGeko): " + errMsg)
   }
 }
-
 
 async function getCoinGraphData(coinCriteria) {
   try {
@@ -378,303 +410,3 @@ async function getCoinGraphData(coinCriteria) {
     throw ("In getCoinGraphData(coinCriteria): " + errMsg)
   }
 }
-
-
-// FUNCTIONS TO PROVIDE HARDCODED TEST DATA FOR THE DEVELOPMENT OF THE SEARCH COMPONENT
-
-function getAvailableCoinsTEST() {
-// Hardcoded Test Data
-// Extract from data return from: https://api.coingecko.com/api/v3/coins/list
-
-    const allCoins = [
-      {
-        "id": "aave",
-        "symbol": "aave",
-        "name": "Aave"
-      },
-      {
-        "id": "aave-dai",
-        "symbol": "adai",
-        "name": "Aave DAI"
-      },
-      {
-        "id": "aave-eth",
-        "symbol": "aeth",
-        "name": "Aave ETH"
-      },
-      {
-        "id": "abc-chain",
-        "symbol": "abc",
-        "name": "ABC Chain"
-      },
-      {
-        "id": "beam",
-        "symbol": "beam",
-        "name": "BEAM"
-      },
-      {
-        "id": "bean-cash",
-        "symbol": "bitb",
-        "name": "Bean Cash"
-      },
-      {
-        "id": "beat",
-        "symbol": "beat",
-        "name": "BEAT"
-      },
-      {
-        "id": "beaxy-exchange",
-        "symbol": "bxy",
-        "name": "Beaxy"
-      },
-      {
-        "id": "bitcoin",
-        "symbol": "btc",
-        "name": "Bitcoin"
-      },
-      {
-        "id": "bitcoin-2",
-        "symbol": "btc2",
-        "name": "Bitcoin 2"
-      },
-      {
-        "id": "bitcoin-5000",
-        "symbol": "bvk",
-        "name": "Bitcoin 5000"
-      },
-      {
-        "id": "bitcoin-adult",
-        "symbol": "btad",
-        "name": "Bitcoin Adult"
-      },
-      {
-        "id": "bitcoin-air",
-        "symbol": "xba",
-        "name": "Bitcoin Air"
-      },
-      {
-        "id": "bitcoin-atom",
-        "symbol": "bca",
-        "name": "Bitcoin Atom"
-      },
-      {
-        "id": "bitcoinbam",
-        "symbol": "btcbam",
-        "name": "BitcoinBam"
-      },
-      {
-        "id": "bitcoin-cash",
-        "symbol": "bch",
-        "name": "Bitcoin Cash"
-      },
-      {
-        "id": "bitcoin-cash-sv",
-        "symbol": "bsv",
-        "name": "Bitcoin SV"
-      }
-    ]
-
-    $.each(allCoins, function (index, coin) {
-      coin.nameLine = `${coin.name} (${coin.symbol})`
-    })
-
-    return allCoins
-}
-
-function getMostPopularCoinSearchesTEST() {
-// Hardcoded Test Data 
-// Data return from: https://api.coingecko.com/api/v3/search/trending
-
-
-    const mostPopularSearches = [
-        {
-            "coins": [
-              {
-                "item": {
-                  "id": "hegic",
-                  "name": "Hegic",
-                  "symbol": "HEGIC",
-                  "market_cap_rank": 155,
-                  "thumb": "https://assets.coingecko.com/coins/images/12454/thumb/Hegic.png?1599938210",
-                  "large": "https://assets.coingecko.com/coins/images/12454/large/Hegic.png?1599938210",
-                  "score": 0
-                }
-              },
-              {
-                "item": {
-                  "id": "team-finance",
-                  "name": "Team Finance",
-                  "symbol": "TEAM",
-                  "market_cap_rank": 664,
-                  "thumb": "https://assets.coingecko.com/coins/images/12480/thumb/team_token_logo.jpg?1600158847",
-                  "large": "https://assets.coingecko.com/coins/images/12480/large/team_token_logo.jpg?1600158847",
-                  "score": 1
-                }
-              },
-              {
-                "item": {
-                  "id": "wabi",
-                  "name": "Wabi",
-                  "symbol": "WABI",
-                  "market_cap_rank": 544,
-                  "thumb": "https://assets.coingecko.com/coins/images/1338/thumb/Tael.png?1547035364",
-                  "large": "https://assets.coingecko.com/coins/images/1338/large/Tael.png?1547035364",
-                  "score": 2
-                }
-              },
-              {
-                "item": {
-                  "id": "axie-infinity",
-                  "name": "Axie Infinity",
-                  "symbol": "AXS",
-                  "market_cap_rank": 313,
-                  "thumb": "https://assets.coingecko.com/coins/images/13029/thumb/axie_infinity_logo.png?1604471082",
-                  "large": "https://assets.coingecko.com/coins/images/13029/large/axie_infinity_logo.png?1604471082",
-                  "score": 3
-                }
-              },
-              {
-                "item": {
-                  "id": "aave",
-                  "name": "Aave",
-                  "symbol": "AAVE",
-                  "market_cap_rank": 33,
-                  "thumb": "https://assets.coingecko.com/coins/images/12645/thumb/AAVE.png?1601374110",
-                  "large": "https://assets.coingecko.com/coins/images/12645/large/AAVE.png?1601374110",
-                  "score": 4
-                }
-              },
-              {
-                "item": {
-                  "id": "renbtc",
-                  "name": "renBTC",
-                  "symbol": "RENBTC",
-                  "market_cap_rank": 55,
-                  "thumb": "https://assets.coingecko.com/coins/images/11370/thumb/renBTC.png?1589985711",
-                  "large": "https://assets.coingecko.com/coins/images/11370/large/renBTC.png?1589985711",
-                  "score": 5
-                }
-              },
-              {
-                "item": {
-                  "id": "keep3rv1",
-                  "name": "Keep3rV1",
-                  "symbol": "KP3R",
-                  "market_cap_rank": 220,
-                  "thumb": "https://assets.coingecko.com/coins/images/12966/thumb/keep3vr_logo.jpg?1603878182",
-                  "large": "https://assets.coingecko.com/coins/images/12966/large/keep3vr_logo.jpg?1603878182",
-                  "score": 6
-                }
-              }
-            ],
-            "exchanges": []
-        }
-    ]
-
-    $.each(mostPopularSearches[0].coins, function (index, coin) {
-      coin.item.nameLine = `${coin.item.name} (${coin.item.symbol}) #${coin.item.market_cap_rank}`
-    })
-
-    return mostPopularSearches[0].coins
-}
-
-
-function getMostPopularCoinSearchesTEST2() {
-  // Hardcoded Test Data 
-  // Data return from: https://api.coingecko.com/api/v3/search/trending
-  
-  // Modified version to strip out inital levels of array objects, ie. from::
-  // [ { "coins" : [ {"item" : {
-  //                              "id" : "xxx"
-  //                              "name": "yyy"
-  //                              "symbol": "zzz",
-  //                              ....
-  //                              },
-  //                 }, ...
-  //               ],
-  //     "exchanges" : []
-  //   }
-  // ]
-  // To simplier array of objects, ie.
-  // [
-  //    {
-  //      "id" : "xxx"
-  //      "name": "yyy"
-  //      "symbol": "zzz",
-  //      ....
-  //    }, ...    
-  // ]
-
-      const mostPopularSearches = [
-                {
-                    "id": "hegic",
-                    "name": "Hegic",
-                    "symbol": "HEGIC",
-                    "market_cap_rank": 155,
-                    "thumb": "https://assets.coingecko.com/coins/images/12454/thumb/Hegic.png?1599938210",
-                    "large": "https://assets.coingecko.com/coins/images/12454/large/Hegic.png?1599938210",
-                    "score": 0
-                },
-                {
-                    "id": "team-finance",
-                    "name": "Team Finance",
-                    "symbol": "TEAM",
-                    "market_cap_rank": 664,
-                    "thumb": "https://assets.coingecko.com/coins/images/12480/thumb/team_token_logo.jpg?1600158847",
-                    "large": "https://assets.coingecko.com/coins/images/12480/large/team_token_logo.jpg?1600158847",
-                    "score": 1
-                },
-                {
-                    "id": "wabi",
-                    "name": "Wabi",
-                    "symbol": "WABI",
-                    "market_cap_rank": 544,
-                    "thumb": "https://assets.coingecko.com/coins/images/1338/thumb/Tael.png?1547035364",
-                    "large": "https://assets.coingecko.com/coins/images/1338/large/Tael.png?1547035364",
-                    "score": 2
-                },
-                {
-                    "id": "axie-infinity",
-                    "name": "Axie Infinity",
-                    "symbol": "AXS",
-                    "market_cap_rank": 313,
-                    "thumb": "https://assets.coingecko.com/coins/images/13029/thumb/axie_infinity_logo.png?1604471082",
-                    "large": "https://assets.coingecko.com/coins/images/13029/large/axie_infinity_logo.png?1604471082",
-                    "score": 3
-                },
-                {
-                    "id": "aave",
-                    "name": "Aave",
-                    "symbol": "AAVE",
-                    "market_cap_rank": 33,
-                    "thumb": "https://assets.coingecko.com/coins/images/12645/thumb/AAVE.png?1601374110",
-                    "large": "https://assets.coingecko.com/coins/images/12645/large/AAVE.png?1601374110",
-                    "score": 4
-                },
-                {
-                    "id": "renbtc",
-                    "name": "renBTC",
-                    "symbol": "RENBTC",
-                    "market_cap_rank": 55,
-                    "thumb": "https://assets.coingecko.com/coins/images/11370/thumb/renBTC.png?1589985711",
-                    "large": "https://assets.coingecko.com/coins/images/11370/large/renBTC.png?1589985711",
-                    "score": 5
-                },
-                {
-                    "id": "keep3rv1",
-                    "name": "Keep3rV1",
-                    "symbol": "KP3R",
-                    "market_cap_rank": 220,
-                    "thumb": "https://assets.coingecko.com/coins/images/12966/thumb/keep3vr_logo.jpg?1603878182",
-                    "large": "https://assets.coingecko.com/coins/images/12966/large/keep3vr_logo.jpg?1603878182",
-                    "score": 6
-                }
-            ]
-             
-
-      $.each(mostPopularSearches, function (index, coin) {
-        coin.nameLine = `${coin.name} (${coin.symbol}) #${coin.market_cap_rank}`
-      })
-  
-      return mostPopularSearches
-  }

@@ -8,7 +8,8 @@
 
 // Global - data for the page
 const fallbackCurrency = "usd"
-let theCoins = []   // Array of coin data for table (yet to be obtained) 
+// let theCoins = []   // Array of coin data for table (yet to be obtained) 
+let theIndexPage = {}     // No index page data obtained as yet
 
 // Use cookie for default currency
 let defaultCurrency = null
@@ -16,8 +17,8 @@ if ( checkCookie(currencyCookie) == true ) defaultCurrency = getCookie(currencyC
 else defaultCurrency = fallbackCurrency
 setCookie(currencyCookie, defaultCurrency, cookieDurationInSeconds) // set or refresh cookie
 
-// Table meta data
-const coinTableCriteria = {
+// Coin table meta data
+const coinCriteria = {
   currencyId: defaultCurrency.toLowerCase(),
   numberCoinsPerPage: 100,
   currentPageNumber: 1
@@ -30,20 +31,20 @@ let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
 try {
     // Obtain the coin data
-//    getTheIndexPageData(defaultCurrency)
-    getTheIndexPageData(coinTableCriteria)
+    getTheIndexPageData(coinCriteria)
     .then (
-        (coinData) => {
-            theCoins = coinData
-            
+        (data) => {
+            theIndexPage = data
+
             // Display the coin data on the webpage
-            populateCoinTable( theCoins )
-            populatePageFooter( theCoins )
+            populateCoinTable( theIndexPage.coins )
+            populatePageFooter( theIndexPage.coins )
 
             // Put the currency selector component onto the page
-            const currencies = getSupportedCurrencies() //TODO: Replace by getting data via getTheIndexPageData()
-            const selectorComponentHtml = createCurrencySelectorDropDownHtml(currencies, defaultCurrency,
-                                                                    "changeCurrencyonIndexPage(event)")
+            const selectorComponentHtml = createCurrencySelectorDropDownHtml(
+                                                  theIndexPage.currencies_supported,
+                                                  defaultCurrency,
+                                                  "changeCoinTableCurrency(event)")
             $("#currencySelectorComponent").html(selectorComponentHtml)
 
 
@@ -57,8 +58,8 @@ try {
                                                          suggestions_list_title: "Trending searches:",
                                                          searchPool_list_title: "Top matching coins:"
                                                        },
-                                              searchPool: getAvailableCoinsTEST(),
-                                              suggestions : getMostPopularCoinSearchesTEST2(),
+                                              searchPool: theIndexPage.all_the_coins,
+                                              suggestions: theIndexPage.trending_coin_searches,
                                               maxItemsInSearchList : 8                                           
                                              }
             const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
@@ -154,16 +155,16 @@ function populatePageFooter(coins) {
 
 function pagePreviousCoins() {
   try {
-    coinTableCriteria.currentPageNumber--
+    coinCriteria.currentPageNumber--
 
     //  If moving back to first page of table, de-activate 'previous' paging control
-    if ( coinTableCriteria.currentPageNumber <= 1 ) {
+    if ( coinCriteria.currentPageNumber <= 1 ) {
       $('li[name="previousPageTableControl"]').addClass("disabled")
       $('li[name="previousPageTableControl"]').attr("tabindex", "-1")
     }
 
     // If moving back from last possible page of table, re-activate 'Next' paging control
-    // *** TODO Later - Nice to have (as page still functions without it)  ***
+    // *** TODO - Only a 'nice to have' as page still functions without it  ***
 
     // Display previous page of coins in table
     reloadCoinData()
@@ -175,16 +176,16 @@ function pagePreviousCoins() {
 
 function pageNextCoins() {
   try {
-    coinTableCriteria.currentPageNumber++
+    coinCriteria.currentPageNumber++
 
     //  If moving on to second page of table, re-activate 'Previous' paging control
-    if (coinTableCriteria.currentPageNumber == 2) {
+    if (coinCriteria.currentPageNumber == 2) {
       $('li[name="previousPageTableControl"]').removeClass("disabled")
       $('li[name="previousPageTableControl"]').attr("tabindex", "0")
     }
 
     // If moving on to last possible page of table, de-activate 'Next' paging control
-    // *** TODO Later - Nice to have (as page still functions without it)  ***
+    // *** TODO - Only a 'nice to have' as page still functions without it  ***
 
     // Display next page of coins in table
     reloadCoinData()
@@ -201,7 +202,7 @@ function sortTableRows(event) {
 
     if ((currentSortOrder == "descending") || (currentSortOrder == "ascending")) {
         // Previously sorted on this column, so simply reverse data order
-        theCoins.reverse()
+        theIndexPage.coins.reverse()
         newSortOrder = (currentSortOrder === "ascending") ? "descending" : "ascending"
     }
     else {  // Not previously sorted
@@ -209,16 +210,16 @@ function sortTableRows(event) {
 
         // Prepare a compare function for the coin attribute
         const coinAttribute = getCoinObjectAttribute(event.target.id)
-        const functionBody = createCompareFunctionBody(theCoins[0], coinAttribute, newSortOrder)
+        const functionBody = createCompareFunctionBody(theIndexPage.coins[0], coinAttribute, newSortOrder)
         const compareFunction = Function("a, b", functionBody)
 
         // Sort the coin data (array of coin objects)
-        theCoins.sort(compareFunction)
+        theIndexPage.coins.sort(compareFunction)
     }
 
     // Update the table with newly sorted coin data
     setColumnHeadersSortOrder(event, newSortOrder)
-    populateCoinTable(theCoins)
+    populateCoinTable(theIndexPage.coins)
   }
   catch (errMsg) {
     throw("In sortTableRows(event): " + errMsg)
@@ -245,21 +246,20 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
   }
 }
 
-// Event Handler for when user clicks "Sync" button
+// Event Handler to "Refresh" the coin table
 function reloadCoinData() {
   try {
     const currencyId = $("#currencyLabelCS").text()
 
     // Obtain the coin data
-//    getTheIndexPageData(currencyId)
-    getTheIndexPageData(coinTableCriteria)
+    getCoinTableData(coinCriteria)
     .then (
-      (coinData) => {
-        theCoins = coinData
-                
+      (data) => {
+        theIndexPage.coins = data.coins
+
         // Display the coin data on the webpage
-        populateCoinTable(theCoins)
-        populatePageFooter(theCoins)
+        populateCoinTable(theIndexPage.coins)
+        populatePageFooter(theIndexPage.coins)
     }) 
   }
   catch (errMsg) {
@@ -280,8 +280,8 @@ function displayCoinPage(event){
   }
 }
 
-// Event Handler for when user clicks on a currency (in currency selector)
-function changeCurrencyonIndexPage(event){
+// Event Handler to update coin table when currency is changed
+function changeCoinTableCurrency(event){
   try {
     // Set the UI's currency selector and applications currency cookie
     const currencyId = $(event.target).text()
@@ -293,17 +293,20 @@ function changeCurrencyonIndexPage(event){
     currency0DP = newCurrencyFormater(currencyId, 0)
     
     // Obtain the coin data in new currency
-    coinTableCriteria.currencyId = currencyId
-    getTheIndexPageData( coinTableCriteria )
+    coinCriteria.currencyId = currencyId
+
+    // Obtain the coin table data
+    getCoinTableData(coinCriteria)
     .then (
-      (coinData) => {
-        theCoins = coinData
+      (data) => {
+        theIndexPage.coins = data.coins
+
         // Display the coin data on the webpage
-        populateCoinTable( theCoins )
-        populatePageFooter( theCoins )
+        populateCoinTable( theIndexPage.coins )
+        populatePageFooter( theIndexPage.coins )
     })
   }
   catch (errMsg) {
-    throw("In changeCurrencyonIndexPage(event) event handler: " + errMsg)
+    throw("In changeCoinTableCurrency(event) event handler: " + errMsg)
   }
 }

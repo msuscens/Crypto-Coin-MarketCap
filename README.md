@@ -32,9 +32,8 @@ Note: Requires local server to be running, eg. in terminal window:
 Project Status:  The project is functional, using live API data.
 
 Next Steps:
-  i)   Replace the hardcoded test data used by coin search component on index page with live coin
-         data (ala the coin search component on the coin page - which does use live API data)
-  ii)  Refine styling of the index and coin pages (and search component)
+  i)   Refine currency selector dropdown layout (now there's a large list of currencies)
+  ii)  Refine styling of the index and coin pages (including search component)
   iii) Add the Exchange tab/page - currently not implemented (but tab selector appears on index page)
   iv)  Refactor coin search object to break down into a set of smaller objects
   v)   Create a new git/gitHub repository for the 'Search Component' superclass, together with    
