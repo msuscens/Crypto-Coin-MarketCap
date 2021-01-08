@@ -25,9 +25,8 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
     // Obtain the coin data
     getTheCoinPageData( coinCriteria )
     .then (
-        (theCoinPageData) => {
-
-            console.log("Returned from getCoinPageData: theCoinPageData = ", theCoinPageData)
+        (data) => {
+            theCoinPageData = data
 
             // Display the data on the coin page, section by section        
             displayCoinHeader( theCoinPageData )
@@ -216,8 +215,9 @@ function getPriceSentimentHtml(coin)
     const votesDownPercentage = coin.sentiment_votes_down_percentage
     const votesUpPercentage = coin.sentiment_votes_up_percentage
 
-    const priceSentimentHtml = `Sentiment: <span style="color:red">
-            <i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}%</span><br>
+    const priceSentimentHtml = `<span class="badge badge-success">Sentiment: </span>
+            <span style="color:red">
+              <i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}%</span><br>
             &nbsp (votes) &nbsp &nbsp <span style="color:green">
             <i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}%</span>`
 
@@ -291,7 +291,7 @@ $("#myShowChartButton").click(async function () {
         const startDate = $("#myDatepicker").datepicker("getDate")
         const daysAgo = getDaysAgo( startDate )
         coinCriteria.graphStartDaysAgo = daysAgo
-            
+        
         const graph = await getCoinGraphData(coinCriteria)
         theCoinPageData.price_graph = graph.price_graph
 

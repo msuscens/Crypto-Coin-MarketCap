@@ -402,7 +402,7 @@ async function getCoinGraphData(coinCriteria) {
     const data = await response
 
     // All data is now available:
-    const graphData = prepareGraphDataFromMarketChart( data )
+    const graphData = preparePriceGraph( data )
 
     return graphData
   }
