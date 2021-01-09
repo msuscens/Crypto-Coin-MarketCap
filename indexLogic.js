@@ -197,7 +197,7 @@ function pageNextCoins() {
 
 function sortTableRows(event) {
   try {
-    const currentSortOrder = $(event.target).prop("order")
+    const currentSortOrder = $(event.currentTarget).prop("order")
     let newSortOrder
 
     if ((currentSortOrder == "descending") || (currentSortOrder == "ascending")) {
@@ -209,7 +209,7 @@ function sortTableRows(event) {
         newSortOrder = "descending"  // default for sort
 
         // Prepare a compare function for the coin attribute
-        const coinAttribute = getCoinObjectAttribute(event.target.id)
+        const coinAttribute = getCoinObjectAttribute(event.currentTarget.id)
         const functionBody = createCompareFunctionBody(theIndexPage.coins[0], coinAttribute, newSortOrder)
         const compareFunction = Function("a, b", functionBody)
 
@@ -235,11 +235,11 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
     // Set sort icons in table column headers
     const sortOrderIcon = (newSortOrder === "ascending") ? sortedAscendingIcon : sortedDescendingIcon
     $("[name='sortColumn']").find("span").html( unsortedIcon )
-    $("#" + event.target.id).find("span").html( sortOrderIcon )
+    $("#" + event.currentTarget.id).find("span").html( sortOrderIcon )
 
     // Set 'order' property on table column headings
-    $(event.target).prop("order", newSortOrder)
-    $(event.target).siblings().removeProp("order")
+    $(event.currentTarget).prop("order", newSortOrder)
+    $(event.currentTarget).siblings().removeProp("order")
   }
   catch (errMsg) {
     throw("In setColumnHeadersSortOrder(event, newSortOrder): " + errMsg)
