@@ -6,7 +6,6 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-
 // Coin page metadata
 const graphStartDaysAgo = 365       // Default for inital page load
 const coinCriteria = {
@@ -172,10 +171,9 @@ function getPrice24hrLowHighHtml(coin)
   try {
     const price24hrLowInCurrency = coin.market_data.low_24h[ coin.currency_id ]
     const price24hrHighInCurrency = coin.market_data.high_24h[ coin.currency_id ]
-
     const price24hrLowHighHtml = `24hr High: <span style="color:green">
                                     ${currency2DP.format(price24hrHighInCurrency)}</span><br>
-                                24hr Low : <span style="color:red">
+                                  24hr Low : <span style="color:red">
                                     ${currency2DP.format(price24hrLowInCurrency)}</span>`
     return price24hrLowHighHtml
   }
@@ -221,11 +219,11 @@ function getPriceSentimentHtml(coin)
     const votesDownPercentage = coin.sentiment_votes_down_percentage
     const votesUpPercentage = coin.sentiment_votes_up_percentage
 
-    const priceSentimentHtml = `<span class="badge badge-success">Sentiment: </span>
+    const priceSentimentHtml = `<span class="badge badge-success">Sentiment:</span>&nbsp 
             <span style="color:red">
-              <i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}%</span><br>
-            &nbsp (votes) &nbsp &nbsp <span style="color:green">
-            <i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}%</span>`
+              <i class="fas fa-thumbs-down"></i> ${votesDownPercentage.toFixed(1)}% </span>&nbsp 
+            <span style="color:green">
+              <i class="fas fa-thumbs-up"></i> ${votesUpPercentage.toFixed(1)}% </span>`
 
     // Set display character if missing vote numbers                  
     const priceSentimentHtmlwithNaNsReplaced = priceSentimentHtml.replace(/NaN/g, "-")
