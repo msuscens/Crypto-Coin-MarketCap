@@ -1,6 +1,6 @@
 Crypto-Coin-MarketCap
 
-My Coinmarketcap.com inspired project:  The index pages show coin data focusing on price, and the
+My Coinmarketcap.com inspired project:  The index page show coin data focusing on price, and the
 coin page displays a price graph for the selected coin and other coin statistics.  On both pages there is a coin search control, currency selector etc.  Live coin data is obtained via CoinGeko API calls.
 
 This project was developed by Mark Suscens as a learning project (to employ HTML, CSS, Bootstrap, JQuery and JavaScript).
@@ -29,14 +29,13 @@ Note: Requires local server to be running, eg. in terminal window:
   (Or run from VS Code using LiveServer)
 
 
-Project Status:  The project is functional, using live API data.
+Project Status:  The project is still under-development but is functional, using live API data.
 
 Next Steps:
-  i)   Refine currency selector dropdown layout (now there's a large list of currencies)
-  ii)  Refine styling of the index and coin pages (including search component)
-  iii) Add the Exchange tab/page - currently not implemented (but tab selector appears on index page)
-  iv)  Refactor coin search object to break down into a set of smaller objects
-  v)   Create a new git/gitHub repository for the 'Search Component' superclass, together with    
+  i)   Refine styling of the index and coin pages (including search component)
+  ii)  Add the Exchange tab/page - currently not implemented (but tab selector appears on index page)
+  iii) Refactor coin search object to break down into a set of smaller objects
+  iv)  Create a new git/gitHub repository for the 'Search Component' superclass, together with    
         documentation for other developers on usage to create their own derived search components.
         (A rough draft of such documemtation is in APPENDIX below.)
 

@@ -8,8 +8,7 @@
 
 // Global - data for the page
 const fallbackCurrency = "usd"
-// let theCoins = []   // Array of coin data for table (yet to be obtained) 
-let theIndexPage = {}     // No index page data obtained as yet
+let theIndexPage = {}    // Will store data obtained for Index page
 
 // Use cookie for default currency
 let defaultCurrency = null
@@ -28,7 +27,6 @@ const coinCriteria = {
 let currency2DP = newCurrencyFormater(defaultCurrency, 2)
 let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
-
 try {
     // Obtain the coin data
     getTheIndexPageData(coinCriteria)
@@ -40,29 +38,32 @@ try {
             populateCoinTable( theIndexPage.coins )
             populatePageFooter( theIndexPage.coins )
 
-            // Put the currency selector component onto the page
-            const selectorComponentHtml = createCurrencySelectorDropDownHtml(
-                                                  theIndexPage.currencies_supported,
-                                                  defaultCurrency,
-                                                  "changeCoinTableCurrency(event)")
-            $("#currencySelectorComponent").html(selectorComponentHtml)
+            // Add the currency selector component onto the page
+            const selectorCriteria =  { id: "currencySelectorComponent",
+                                        currencies: theIndexPage.currencies_supported,
+                                        selectedCurrency: defaultCurrency,
+                                        currencyUpdateFunc: changeCoinTableCurrency
+                                      }
+            const currencySelector = new CurrencySelectorComponent(selectorCriteria)
 
+            // Save currency selector object (in the html div of currency selector)
+            $("#currencySelectorComponent").prop("currencySelectorObject", currencySelector)
 
-            // Create and add coin Search Component onto the page
-            const coinSearchComponentData = { idSC: "coinSearchComponent",
-                                              idSCForm: "coinSearchForm",
-                                              idSCInput: "coinSearchInput",
-                                              idSCList: "coinSearchList",
-                                              textSC : { input_title: "Type in a coin name or id",
-                                                         input_placeholder: "Search for a coin...",
-                                                         suggestions_list_title: "Trending searches:",
-                                                         searchPool_list_title: "Top matching coins:"
-                                                       },
-                                              searchPool: theIndexPage.all_the_coins,
-                                              suggestions: theIndexPage.trending_coin_searches,
-                                              maxItemsInSearchList : 8                                           
-                                             }
-            const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
+            // Add a coin search component onto the page
+            const componentCriteria = { idSC: "coinSearchComponent",
+                                        idSCForm: "coinSearchForm",
+                                        idSCInput: "coinSearchInput",
+                                        idSCList: "coinSearchList",
+                                        textSC: { input_title: "Type in a coin name or id",
+                                                  input_placeholder: "Search for a coin...",
+                                                  suggestions_list_title: "Trending searches:",
+                                                  searchPool_list_title: "Top matching coins:"
+                                                },
+                                        searchPool: theIndexPage.all_the_coins,
+                                        suggestions: theIndexPage.trending_coin_searches,
+                                        maxItemsInSearchList : 8                                           
+                                       }
+            const coinSearch = new CoinSearchComponent(componentCriteria)
         }  
     )
 } catch (errMsg) {
@@ -92,13 +93,12 @@ function populateCoinTable(coins) {
   }
 }
 
-
 function constructTableRowHtml(coin) {
 // Create and return the HTML string for a coin's table row (using the given coin data)
   try{
     const coinNameLine = `<img src="${coin.image}"border=3 height=25 width=25> ${coin.name} (${coin.symbol})`
 
-    const coinRowHtml = `<tr onclick="displayCoinPage(event)" coinid="${coin.id}"> 
+    const coinRowHtml = `<tr name="coinTableRow" onclick="displayCoinPage(event)" coinid="${coin.id}"> 
                             <td>${coin.market_cap_rank}</td>
                             <td>${coinNameLine}</td>
                             <td>${currency2DP.format(coin.current_price)}</td>
@@ -246,11 +246,9 @@ function setColumnHeadersSortOrder(event, newSortOrder) {
   }
 }
 
-// Event Handler to "Refresh" the coin table
 function reloadCoinData() {
+// Event Handler to "Refresh" the coin table
   try {
-    const currencyId = $("#currencyLabelCS").text()
-
     // Obtain the coin data
     getCoinTableData(coinCriteria)
     .then (
@@ -267,11 +265,11 @@ function reloadCoinData() {
   }
 }
 
-// Event Handler for when user clicks a row of the coin table
 function displayCoinPage(event){
+// Event Handler for when user clicks a row of the coin table
   try {
     const coinID = event.target.parentNode.attributes.coinid.nodeValue
-    const currencyID = $("#currencyLabelCS").text().toLowerCase()  
+    const currencyID = coinCriteria.currencyId.toLowerCase()
 
     window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
   }
@@ -281,11 +279,9 @@ function displayCoinPage(event){
 }
 
 // Event Handler to update coin table when currency is changed
-function changeCoinTableCurrency(event){
+//function changeCoinTableCurrency(event){
+function changeCoinTableCurrency(currencyId){
   try {
-    // Set the UI's currency selector and applications currency cookie
-    const currencyId = $(event.target).text()
-    $("#currencyLabelCS").text( currencyId )
     setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
 
     // Update the currency formatters to new currency
@@ -294,8 +290,6 @@ function changeCoinTableCurrency(event){
     
     // Obtain the coin data in new currency
     coinCriteria.currencyId = currencyId
-
-    // Obtain the coin table data
     getCoinTableData(coinCriteria)
     .then (
       (data) => {
@@ -307,6 +301,6 @@ function changeCoinTableCurrency(event){
     })
   }
   catch (errMsg) {
-    throw("In changeCoinTableCurrency(event) event handler: " + errMsg)
+    throw("In changeCoinTableCurrency(currencyId) event handler: " + errMsg)
   }
 }

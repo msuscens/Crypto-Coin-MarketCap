@@ -39,13 +39,19 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
             displayDescription( theCoinPageData )
             displayFooter( theCoinPageData )
 
-            // Put the currency selector component onto the page
-            const componentHtml = createCurrencySelectorDropDownHtml(
-                                    theCoinPageData.market_data.currencies_supported,
-                                    theCoinPageData.currency_id, "changeCurrencyOnCoinPage(event)")
-            $("#currencySelectorComponent2").html(componentHtml)
+            // Add the currency selector component onto the page
+            const selectorCriteria =  { id: "currencySelectorComponent",
+                                        currencies: theCoinPageData.market_data.currencies_supported,
+                                        selectedCurrency: theCoinPageData.currency_id,
+                                        currencyUpdateFunc: changeCurrencyOnCoinPage
+                                      }
+            const currencySelector = new CurrencySelectorComponent(selectorCriteria)
 
-            // Create and add coin Search Component onto the page
+            // Save currency selector object (in the html div of currency selector)
+            $("#currencySelectorComponent").prop("currencySelectorObject", currencySelector)
+
+
+            // Add a Coin Search Component onto the page
             const coinSearchComponentData = { idSC: "coinSearchComponent",
                                               idSCForm: "coinSearchForm",
                                               idSCInput: "coinSearchInput",
@@ -369,21 +375,16 @@ function displayGraph(graph) {
 
 
 // Event Handler for when user clicks on a currency (in currency selector)
-function changeCurrencyOnCoinPage(event){
+function changeCurrencyOnCoinPage(currencyId) {
     try {
-        // Set the UI's currency selector and currency cookie to the new currency
-        const currencyId = $(event.target).text()
-        $("#currencyLabelCS").text( currencyId )
         setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
 
         // Update the currency formatters to new currency
         currency2DP = newCurrencyFormater(currencyId, 2)
         currency0DP = newCurrencyFormater(currencyId, 0)
 
-        // Update global data objects and to the new currency
-        theCoinPageData.currency_id = coinCriteria.currencyId = currencyId.toLowerCase()
-
-        // Fetch chart data and then display it on the page      
+        // Fetch price graph data in new currency  
+        theCoinPageData.currency_id = coinCriteria.currencyId = currencyId.toLowerCase()     
         getCoinGraphData(coinCriteria)
         .then (
             (graphData) => {

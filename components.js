@@ -15,65 +15,156 @@
 //
 // Currency Selector dropdown component
 //
-function createCurrencySelectorDropDownHtml( currencies, selectedCurrency, onclickFunctionCall ){
+class CurrencySelectorComponent {
 
-  let htmlCurrencySelector = `<div class="dropdown">
-                                <button class="btn btn-light dropdown-toggle" data-toggle="dropdown">
-                                  <span id="currencyLabelCS">${selectedCurrency.toUpperCase()}</span>
-                                </button>
-                                <div class="dropdown-menu">`
+  constructor(component) {
+  // component parameter object consists of:
+  //  { id:                 <string> - The HTML id of the div into which component will be created,
+  //    currencies:         <array>  - List of currency identifiers <strings> for the selection dropdown,
+  //    selectedCurrency:   <string> - The currency initially shown as selected,
+  //    currencyUpdateFunc: <function> - The applications own event handler function name 
+  //                                     (without functions currencyId paramter) that will be
+  //                                      called by the component when user selects a currency.
+  //  }
+  //
+    try {
+      // Set component's attributes
+      this._idComponent = component.id
+      this._idButton = component.id + "Button"
+      this._idDropdown = component.id + "Dropdown"
+      this._idInputbox = component.id + "Inputbox"
+      this._currencyUpdateAppEventHandler = component.currencyUpdateFunc
 
-  $.each(currencies, function (index, currencyId) {
-    const currencyDropDownItemHTML = `<a class="dropdown-item" href="#"
-                                    onclick="${onclickFunctionCall}">${currencyId.toUpperCase()}</a>`
-    htmlCurrencySelector += currencyDropDownItemHTML
+      // Construct the html for the component
+      let htmlCurrencySelector = `<div class="dropdown">
+                                    <button id="${this._idButton}" class="btn-light dropbtn">
+                                      ${component.selectedCurrency.toUpperCase()}
+                                    </button>
+                                    <div id="${this._idDropdown}" class="dropdown-content">
+                                      <input type="text" placeholder="Search..." id="${this._idInputbox}">`
 
-  })
-  htmlCurrencySelector += `</div></div>`
+      $.each(component.currencies, function (index, currencyId) {
+        const currencyDropDownItemHTML = `<a href="#">${currencyId.toUpperCase()}</a>`
+        htmlCurrencySelector += currencyDropDownItemHTML
+      })
+      htmlCurrencySelector += `</div></div>`
 
-  return htmlCurrencySelector
+      // Put currency selector onto  page
+      $(`#${this._idComponent}`).html(htmlCurrencySelector)
+
+      // Add component operation event handlers
+      const button = document.getElementById(this._idButton)
+      button.addEventListener("click", this)
+
+      const input = document.getElementById(this._idInputbox)
+      input.addEventListener("keyup", this)
+
+      const dropdown = document.getElementById(this._idDropdown)
+      const currencyElements = dropdown.querySelectorAll("a") 
+      for (const currency of currencyElements.values()){
+        currency.addEventListener("click", this)
+      }
+    }
+    catch (errMsg) {
+      throw ("Error in CurrencySelectorComponent: constructor(component): " + errMsg)
+    }
+  }
+
+  getCurrencyId(){
+    try {
+      const currencyId = $(`#${this._idButton}`).text().trim()
+      return currencyId
+    }
+    catch (errMsg) {
+      throw ("Error in CurrencySelectorComponent:getCurrencyId(): " + errMsg)
+    }
+  }
+
+  handleEvent(event) {
+  // Handles component's operation events
+    try {    
+      switch(event.type) {
+        case "click": // button or currency item?
+          if (event.target.id == this._idButton){
+            this._toggleShowHideDropDown()
+          }
+          else { // currency item selected
+            // Set button text to new currency
+            const currencyId = $(event.target).text()
+            $(`#${this._idButton}`).text( currencyId )
+
+            // Perform application specific actions
+            this._currencyUpdateAppEventHandler(currencyId)
+
+            // Close the dropdown
+            this._toggleShowHideDropDown()
+          }
+        break
+        case "keyup": // input box
+            this._filterCurrencyList()
+        break
+        default:
+            throw `Unexpected event type encountered, with event.type = ${event.type}`
+      }
+    }
+    catch (errMsg){
+      throw ("CurrencySelectorComponent Error: In handleEvent(event): " + errMsg)
+    }
+  }
+
+  _toggleShowHideDropDown() {
+    document.getElementById(this._idDropdown).classList.toggle("show")
+
+    // Return input and list to original state
+    document.getElementById(this._idInputbox).value = ""
+    this._filterCurrencyList()
+  }
+
+  _filterCurrencyList() {
+    const input = document.getElementById(this._idInputbox)
+    const filter = input.value.toUpperCase()
+    const dropdown = document.getElementById(this._idDropdown)
+    const aElements = dropdown.getElementsByTagName("a")
+    let text = ""
+    for (let i = 0; i < aElements.length; i++) {
+      text = aElements[i].textContent || aElements[i].innerText
+      if (text.toUpperCase().indexOf(filter) > -1) {
+        aElements[i].style.display = ""
+      } else {
+        aElements[i].style.display = "none"
+      }
+    }
+  }
 }
-
-// TODO: Consider refactoring Currency Selector function into a CurrencySelectorComponent class
-// with an object constructor and get method to obtain the currency id .... 
-//   
-//  function getCurrencyId(){
-//    const currencyId = $("#currencyLabelCS").text()
-//    return currencyId
-//  }
-
 
 //
 // Coin Search Component
 //
 class CoinSearchComponent extends SearchComponent {
   
-  _createHtmlForListItem( suggestionOrSearchData, dataIndex ){
+  _createHtmlForListItem(suggestionOrSearchData, dataIndex) {
     // Implementation for to create Coin list item HTML (ie. a single list item). 
     // This method overides the superclass method of the same name (ie. in the SearchComponent class).
     try {
       const coinId = suggestionOrSearchData[dataIndex].id
       const listItemText = suggestionOrSearchData[dataIndex].nameLine
       const listItemHtml = `<li><a href="coin.html?coinid=${coinId}"> ${listItemText} </a></li>`
-    
       return listItemHtml
     }
     catch (errMsg){
-      throw ("CoinSearchComponent error in _createHtmlForListItem( suggestionOrSearchData, dataIndex ): " + errMsg)
+      throw ("CoinSearchComponent error in _createHtmlForListItem(suggestionOrSearchData, dataIndex): " + errMsg)
     }
   }
   
-  _listItemClickEvent( searchComponent, event) {
+  _listItemClickEvent(searchComponent, event) {
     // Implementation for a click event on a Coin Search List Item. 
     // This method overides the superclass method of the same name (ie. in the SearchComponent class).
-    try{
-      console.log("In _listItemClickEvent( searchComponent, event)")
-    
+    try{    
       // Construct full url for the Coin page (ie. add currency )
-      const currencyId = $("#currencyLabelCS").text().toLowerCase() 
+      const currencySelector = $("#currencySelectorComponent").prop("currencySelectorObject")
+      const currencyId = currencySelector.getCurrencyId().toLowerCase()
       const coinPageUrl = `${event.target.href}&currencyid=${currencyId}` 
-      console.log(`coinPageurl = ${coinPageUrl}`)
-    
+
       // Reset input and search list (in case user goes 'back' in browser)
       super._listItemClickEvent( searchComponent, event)
   
@@ -81,7 +172,7 @@ class CoinSearchComponent extends SearchComponent {
       window.location.href = coinPageUrl
     }
     catch (errMsg){
-      throw ("CoinSearchComponent error in _listItemClickEvent( searchComponent, event) " + errMsg)
+      throw ("CoinSearchComponent error in _listItemClickEvent(searchComponent, event) " + errMsg)
     }
   }
 }
