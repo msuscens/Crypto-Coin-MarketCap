@@ -1,7 +1,7 @@
 /* CS styles for "Mark's Coin Cap" application */
 
 body {
-    background:#efefefef;
+    background:#ffffff;
     color:#444444;
   }
 
@@ -16,6 +16,10 @@ tr[name="coinTableRow"] {
   cursor: pointer;
 }
 
+
+#myPageFooter {
+  font-size: 12px;
+}
 
 /* TODO - Make the column headers sticky 
 thead.sticky {
@@ -47,6 +51,7 @@ thead.sticky {
   padding: 14px 20px 12px 45px;
   border: none;
   border-bottom: 1px solid #ddd;
+  width: 140px;
 }
 
 /* The search field when it gets focus/clicked on */
@@ -56,6 +61,8 @@ thead.sticky {
 .dropdown {
   position: relative;
   display: inline-block;
+  width: 140px;
+
 }
 
 /* Dropdown Content (Hidden by Default) */
@@ -63,7 +70,6 @@ thead.sticky {
   display: none;
   position: absolute;
   background-color: #f6f6f6;
-  width: 200%;
   overflow:auto;
   height: 300px;
   border: 1px solid #ddd;

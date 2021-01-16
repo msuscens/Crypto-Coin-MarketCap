@@ -34,8 +34,8 @@
             <h1><a href="index.html"><i class="fas fa-chart-line"></i></a></h1>
         </div>
         <div class="col-sm-8" align="left">
-            <h1>Cryptocurrency Coin Prices</h1>
-            <h3>(ranked by Market Capitalisation)</h3>
+            <h1>The Crypto-Asset Market</h1>
+            <h5>Coins & tokens; and the Exchanges trading them</h5> 
         </div>
 
         <div class="col-sm-3" align="right">
@@ -45,100 +45,249 @@
     </div>
     <hr>
 
-    <!-- Second row for page controls  -->
+    <!-- Second row for Nav Tabs and all associated content -->
     <div class="row">
 
-      <!-- Left-side for nav tabs  -->
-      <div class="col-sm-6">
-        <ul class="nav nav-tabs">
-          <li class="nav-item">
-            <a class="nav-link active" href="#">Cryptocurrencies</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Exchanges</a>
-          </li>
-        </ul>
-      </div>
+      <!-- Nav tabs across page -->
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <!-- Coins tab position --> 
+        <li class="nav-item">
+          <a class="nav-link active" id="coins-tab" data-toggle="tab" href="#coinsNavTabArea" role="tab"
+            aria-controls="coinsNavTabArea" aria-selected="true">Coins & Tokens</a>
+        </li>
+        <!-- Exchanges tab position -->
+        <li class="nav-item">
+          <a class="nav-link" id="exchanges-tab" data-toggle="tab" href="#exchangesNavTabArea" role="tab"
+            aria-controls="exchangesNavTabArea" aria-selected="false">Exchanges</a>
+        </li>
+      </ul>
 
-      <!-- Right-side for currency selection and paging controls -->
-      <div class="col-sm-6">
-        <div align="right">
-          <div class="btn-group">
+      <!-- Tab Content -->
+      <div class="tab-content" id="myTabContent">
 
-            <button class="btn btn-light mr-4" onclick="reloadCoinData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <!-- Coins tab content-->
+        <div class="tab-pane fade show active" id="coinsNavTabArea" role="tabpanel" aria-labelledby="coins-tab">
 
-            <div id="currencySelectorComponent"></div>  <!-- Component placeholder  -->
+          <!-- Sync (Refresh) button and Currency Selector control -->
+          <div class="row">
+            <div class="col-sm-6" align="left">
+              <!--
+              <div class="btn-group">
+                <button class="btn btn-light mr-3" onclick="reloadCoinData()">
+                        <i class="fas fa-sync-alt"></i> Sync</button>
 
-            <nav aria-label="Next and Prevous page controls for the coin table">
-              <ul class="pagination ml-4">
-                <li class="page-item disabled" name="previousPageTableControl">
-                  <a class="page-link" href="#" tabindex="-1" onclick="pagePreviousCoins()">Previous 100</a>
-                </li>
-                <li class="page-item" name="nextPageTableControl">
-                  <a class="page-link" href="#" onclick="pageNextCoins()">Next 100</a>
-                </li>
-              </ul>
-            </nav>
+                <div id="currencySelectorComponent"></div> 
+              </div>
+              -->
+            </div>
 
+            <!-- Paging controls (above the Coins table) -->
+            <div class="col-sm-6" align="right">
+              <div class="btn-group mt-n5">
+                
+                <div id="currencySelectorComponent"></div>  <!-- Component placeholder  -->
+
+                <button class="btn btn-light ml-4" onclick="reloadCoinData()">
+                          <i class="fas fa-sync-alt"></i></button>
+  
+                <nav aria-label="Next and Prevous page controls for the coin table">
+                  <ul class="pagination ml-4">
+                    <li class="page-item disabled" name="previousPageTableControl">
+                      <a class="page-link" href="#" tabindex="-1"
+                        onclick="loadPreviousPageIntoTable('coinsNavTabArea')">Previous 100</a>
+                    </li>
+                    <li class="page-item" name="nextPageTableControl">
+                      <a class="page-link" href="#"
+                        onclick="loadNextPageIntoTable('coinsNavTabArea')">Next 100</a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
           </div>
+
+          <!-- Table of Coins  -->
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="sticky">
+                <tr>
+                  <th id="rankColumn" name="sortColumn" title="Coins ranked by market capitalization"
+                      dataObjectAttribute="market_cap_rank"
+                      onclick="sortTableRows(event, 'coinsNavTabArea')"># <span><i
+                        class="fas fa-sort-down"></i></span></th>
+                  <th id="nameColumn" name="sortColumn" title="Coin's Icon, Name (Id)"
+                      dataObjectAttribute="name"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Coins <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="priceColumn" name="sortColumn" title="Coin's current market price (price per coin)"
+                      dataObjectAttribute="current_price"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Price <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="change1hrColumn" name="sortColumn" title="The coin's percentage price change over the last hour"
+                      dataObjectAttribute="price_change_percentage_1h_in_currency"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Change (1hr) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="change24hrColumn" name="sortColumn" title="The coin's percentage price change over last 24 hours"
+                      dataObjectAttribute="price_change_percentage_24h_in_currency"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Change (24h) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="change7dColumn" name="sortColumn" title="The coin's percentage price change over last 7 days"
+                      dataObjectAttribute="price_change_percentage_7d_in_currency"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Change (7d) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="change30dColumn" name="sortColumn" title="The coin's percentage price change over last 30 days"
+                      dataObjectAttribute="price_change_percentage_30d_in_currency"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Change (30d) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="change1yrColumn" name="sortColumn" title="The coin's percentage price change over last 365 days"
+                      dataObjectAttribute="price_change_percentage_1y_in_currency"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Change (1yr) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="marketCapColumn" name="sortColumn" title="Market Capitalisation (total number of coins in circulation multiplied by the coin's current market price)"
+                      dataObjectAttribute="market_cap"
+                      onclick="sortTableRows(event,'coinsNavTabArea')">Market Cap <span><i
+                        class="fas fa-sort"></i></span></th>
+                </tr>
+              </thead>
+
+              <tbody id="myCoinTableBody"></tbody>
+    
+            </table>
+          </div>
+    
+          <!-- Paging controls (below the Coins table) -->
+          <div align="right">
+            <div class="btn-group">
+              <nav aria-label="Next and Prevous page controls for the coin table">
+                <ul class="pagination ml-4">
+                  <li class="page-item disabled" name="previousPageTableControl">
+                    <a class="page-link" href="#" tabindex="-1" 
+                      onclick="loadPreviousPageIntoTable('coinsNavTabArea')">Previous 100</a>
+                  </li>
+                  <li class="page-item" name="nextPageTableControl">
+                    <a class="page-link" href="#"
+                      onclick="loadNextPageIntoTable('coinsNavTabArea')">Next 100</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+    
+          <!-- Coin Tab Footer-->
+          <div class="row">
+            <div id="myCoinTableFooter" class="col-sm-12" align="center"></div>
+          </div>
+              
         </div>
+
+        <!-- Exchanges tab content  -->
+        <div class="tab-pane fade" id="exchangesNavTabArea" role="tabpanel" aria-labelledby="exchanges-tab">
+    
+          <!-- Controls for Exchange Tabs table -->
+          <div class="row">
+            <div class="col-sm-12" align="right">
+
+              <!-- Paging controls (above the Exchanges table) -->
+              <div class="btn-group mt-n5">
+                <nav aria-label="Next and Previous page controls for the Exchange table">
+                  <ul class="pagination ml-4">
+                    <li class="page-item disabled" name="previousPageTableControl"
+                      title="Reload the previous 100 Exchanges into the table">
+                      <a class="page-link" href="#" tabindex="-1"
+                        onclick="loadPreviousPageIntoTable('exchangesNavTabArea')">Previous 100</a>
+                    </li>
+                    <li class="page-item" name="nextPageTableControl"
+                      title="Load the next 100 Exchanges into the table">
+                      <a class="page-link" href="#"
+                        onclick="loadNextPageIntoTable('exchangesNavTabArea')">Next 100</a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Table of Exchanges  -->
+          <div class="table-responsive">
+            <table class="table" id="exchangesTable">
+              <thead class="sticky">
+                <tr>
+                  <th id="exchangeRankColumn" name="sortColumn" title="Exchanges ranked by Trust Score"
+                      dataObjectAttribute="trust_score_rank"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')"># <span><i
+                        class="fas fa-sort-down"></i></span></th>
+                  <th id="exchangeNameColumn" name="sortColumn" title="Exchange's Icon, Name (Id)"
+                      dataObjectAttribute="name"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Exchange <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="tradeVolumeColumn" name="sortColumn" title="Exchange's trade over 24-hour period"
+                      dataObjectAttribute="trade_volume_24h_btc"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Trade Volume<br>(in BTC)<span><i
+                        class="fas fa-sort"></i></span></th>
+      <!--            
+                  <th id="tradeVolumeNormalizedColumn" name="sortColumn" title="Exchange's trade over 24-hour period"
+                      dataObjectAttribute="trade_volume_24h_btc_normalized"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Trade Volume Normalised (in BTC)<span><i
+                        class="fas fa-sort"></i></span></th>
+      -->
+                  <th id="exchangeCountryColumn" name="sortColumn" title="Where exchange is registered"
+                      dataObjectAttribute="country"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Country <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="establishedYear" name="sortColumn" title="Exchange started operations"
+                      dataObjectAttribute="year_established"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Established<br>(year) <span><i
+                        class="fas fa-sort"></i></span></th>
+                  <th id="exchangeTrustScoreColumn" name="sortColumn" title="Coingeko's trust score for the exchange"
+                      dataObjectAttribute="trust_score"
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Trust Score<br>(out of 10) <span><i
+                        class="fas fa-sort"></i></span></th>
+                </tr>
+              </thead>
+                    
+              <tbody id="myExchangeTableBody"></tbody>
+    
+            </table>
+          </div>
+    
+          <!-- Paging controls (below the Exchanges table) -->
+          <div align="right">
+            <div class="btn-group">
+              <nav aria-label="Next and Previous page controls for the Exchange table">
+                <ul class="pagination ml-4">
+                  <li class="page-item disabled" name="previousPageTableControl">
+                    <a class="page-link" href="#" tabindex="-1"
+                      onclick="loadPreviousPageIntoTable('exchangesNavTabArea')">Previous 100</a>
+                  </li>
+                  <li class="page-item" name="nextPageTableControl">
+                    <a class="page-link" href="#"
+                      onclick="loadNextPageIntoTable('exchangesNavTabArea')">Next 100</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Exchange Table Footer-->
+          <div class="row">
+            <div id="myExchangeTableFooter" class="col-sm-12" align="center"></div>
+          </div>
+
+        </div>
+
       </div>
-    </div>
-
-    <!-- Main page area - ie. Table of Coins  -->
-    <div class="table-responsive">
-      <table class="table">
-        <thead class="sticky">
-          <tr>
-            <th id="rankColumn" name="sortColumn" onclick="sortTableRows(event)"># <span><i
-                  class="fas fa-sort-down"></i></span></th>
-            <th id="nameColumn" name="sortColumn" onclick="sortTableRows(event)">Coin <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="priceColumn" name="sortColumn" onclick="sortTableRows(event)">Price <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change1hrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (1hr) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change24hrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (24h) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change7dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (7d) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change30dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (30d) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change200dColumn" name="sortColumn" onclick="sortTableRows(event)">Change (200d) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="change1yrColumn" name="sortColumn" onclick="sortTableRows(event)">Change (1yr) <span><i
-                  class="fas fa-sort"></i></span></th>
-            <th id="marketCapColumn" name="sortColumn" onclick="sortTableRows(event)">Market Cap <span><i
-                  class="fas fa-sort"></i></span></th>
-          </tr>
-        </thead>
-        <tbody id="myCoinTableBody">
-        </tbody>
-
-      </table>
 
     </div>
 
-    <!-- Table footer (with table paging controls)  -->
-    <div align="right">
-      <div class="btn-group">
-        <nav aria-label="Next and Prevous page controls for the coin table">
-          <ul class="pagination ml-4">
-            <li class="page-item disabled" name="previousPageTableControl">
-              <a class="page-link" href="#" tabindex="-1" onclick="pagePreviousCoins()">Previous 100</a>
-            </li>
-            <li class="page-item" name="nextPageTableControl">
-              <a class="page-link" href="#" onclick="pageNextCoins()">Next 100</a>
-            </li>
-          </ul>
-        </nav>
-
+    <!-- Page footer -->
+    <div class="row" id="myPageFooter">
+      <div class="col-sm-6" align="left">
+        <p>All coin and exchange data courtsey of coingeko (via their API).</p>
       </div>
-    </div>
-
-    <!-- Page Footer-->
-    <div class="row">
-      <div id="myPageFooter" , class="col-sm-12" align="center"></div>
+      <div class="col-sm-6" align="left">
+        <p>Website developed by Mark Suscens (2020-21).</p>
+      </div>
     </div>
 
   </div>

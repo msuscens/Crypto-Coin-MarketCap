@@ -15,78 +15,86 @@ const API_ENDPOINTS = {
         const SUPPORTED_CURRENCIES_ENDPOINT = "/simple/supported_vs_currencies"
         return (this._BASE_URL + SUPPORTED_CURRENCIES_ENDPOINT)
     },
-
     getListAllCoinsUrl: function() {
       const COIN_LIST_ENDPOINT = "/coins/list"
       return (this._BASE_URL + COIN_LIST_ENDPOINT)
     },
-
     getTrendingSearchesUrl: function() {
       const TRENDING_SEARCHES_ENDPOINT = "/search/trending"
       return (this._BASE_URL + TRENDING_SEARCHES_ENDPOINT)
     },
-
     getCoinsMarketUrl: function(criteria) {
         const COINS_MARKET_ENDPOINT = "/coins/markets?vs_currency=" + criteria.currencyId +
-            "&order=market_cap_desc&per_page=" + criteria.numberCoinsPerPage +
+            "&order=market_cap_desc&per_page=" + criteria.rowsPerPage +
             "&page=" + criteria.currentPageNumber + "&sparkline=false" +
             "&price_change_percentage=1h%2C24h%2C7d%2C14d%2C30d%2C200d%2C1y"
         return (this._BASE_URL + COINS_MARKET_ENDPOINT)
     },
-
-    getCoinUrl: function(coinCriteria) {
-        const COIN_ENDPOINT = "/coins/" + coinCriteria.coinId +
+    getCoinUrl: function(criteria) {
+        const COIN_ENDPOINT = "/coins/" + criteria.coinId +
                 "?localization=false&tickers=false&market_data=true" +
                 "&community_data=true&developer_data=true&sparkline=false"
         return (this._BASE_URL + COIN_ENDPOINT)
     },
-
-    getMarketChartUrl: function(coinCriteria) {
-        const startDate = getPreviousDate( coinCriteria.graphStartDaysAgo )
+    getMarketChartUrl: function(criteria) {
+        const startDate = getPreviousDate(criteria.graphStartDaysAgo)
         const startUnixTimestamp =  Math.floor(startDate.getTime() / 1000)
         const endUnixTimestamp = Math.floor(Date.now() / 1000)
-     
-        const MARKET_CHART_ENDPOINT = "/coins/" + coinCriteria.coinId + 
+        const MARKET_CHART_ENDPOINT = "/coins/" + criteria.coinId + 
                                     "/market_chart/range?vs_currency=" +
-                                    coinCriteria.currencyId.toLowerCase() +
+                                    criteria.currencyId.toLowerCase() +
                                     "&from=" + startUnixTimestamp +
                                     "&to=" + endUnixTimestamp        
         return (this._BASE_URL + MARKET_CHART_ENDPOINT)
-    }
+    },
+    getListAllExchangesUrl: function() {
+      const EXCHANGE_LIST_ENDPOINT = "/exchanges/list"
+      return (this._BASE_URL + EXCHANGE_LIST_ENDPOINT)
+    },
+    getExchangesUrl: function(criteria) {
+      const EXCHANGES_ENDPOINT = "/exchanges" + 
+          "?per_page=" + criteria.rowsPerPage +
+          "&page=" + criteria.currentPageNumber
+      return (this._BASE_URL + EXCHANGES_ENDPOINT)
+  }
 }
-
 
 // FUNCTIONS FOR OBTAINING THE INDEX (HOME) PAGE DATA
 
-async function getTheIndexPageData(coinCriteria) {
+async function getTheIndexPageData(criteria) {
   try {
-    // Get the external datafor the Coin page
-    const indexPage = await getExternalDataForIndexPage(coinCriteria)
+    // Get the external data for the Index page
+    const indexPage = await getExternalDataForIndexPage(criteria)
 
-    // Any other data required by page: Add to indexPage object 
+    // Set any other data required by page (ie. add to indexPage object) 
     // *** None required at present ***
 
     return indexPage
   }
   catch (errMsg){
-    throw ("Error from InterfaceAPI.js getTheIndexPageData(coinCriteria): " + errMsg)
+    throw ("Error from InterfaceAPI.js getTheIndexPageData(criteria): " + errMsg)
   }
 }
 
-async function getExternalDataForIndexPage(coinCriteria) {
+async function getExternalDataForIndexPage(criteria) {
   try {
-    // Get API URLs (for calls to CoinGeko), for ...
-    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinCriteria)     
+    // Get API URLs (for calls to CoinGeko),
+    // For Coins:
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(criteria.coins)     
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl() 
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
-    
+    // For Exchanges:
+    const urlListAllExchangesApi = API_ENDPOINTS.getListAllExchangesUrl()
+    const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.exchanges)     
+
     let indexPageData = {}
 
     // Fetch all the data (via multiple simulataneous api calls)
     // Await for receipt and decoding of all data (before returning data set)
     await Promise.all([ fetch(urlCoinsMarketApi), fetch(urlSupportedCurrenciesApi),
-                        fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi) ]
+                        fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi),
+                        fetch(urlExchangesApi), fetch(urlListAllExchangesApi) ]
     ).then(function (responses) {
 
         // Get a JSON object from all the responses (mapping each into an array)
@@ -98,23 +106,25 @@ async function getExternalDataForIndexPage(coinCriteria) {
         indexPageData = collateIndexPage(data)
     })
     .catch(function (errMsg) {
-        throw("Error in getExternalDataForIndexPage(coinCriteria): " + errMsg)
+        throw("Error in getExternalDataForIndexPage(criteria): " + errMsg)
     })
 
     return indexPageData
   }
   catch (errMsg){
-    throw ("In getExternalDataForIndexPage(coinCriteria): " + errMsg)
+    throw ("In getExternalDataForIndexPage(criteria): " + errMsg)
   }
 }
 
 function collateIndexPage(rawCoinGekoData){
   try {
     // Prepare and collate data required by index page
-    const indexPageData = { ... prepareCoinTable(rawCoinGekoData[0]),
-                            ... prepareListOfSupportedCurrencies(rawCoinGekoData[1]),
+    const indexPageData = { ... prepareCoins(rawCoinGekoData[0]),
+                            ... prepareSupportedCurrencies(rawCoinGekoData[1]),
                             ... prepareListOfAllCoins(rawCoinGekoData[2]),
-                            ... prepareListOfTrendingCoinSearches(rawCoinGekoData[3])
+                            ... prepareListOfTrendingCoinSearches(rawCoinGekoData[3]),
+                            ...prepareExchanges(rawCoinGekoData[4]),
+//                            ...prepareListOfAllExchanges(rawCoinGekoData[5])
                           }
     return indexPageData
   }
@@ -123,11 +133,11 @@ function collateIndexPage(rawCoinGekoData){
   }
 }
 
-function prepareCoinTable(coinDataFromCoingeko) {
+function prepareCoins(rawCoinData) {
   try {
-    // Select relevant data, adding fallback values for missing data
+    // Select relevant coin data, adding fallback values for missing data
     let myCoinData = []
-    for (let coin of coinDataFromCoingeko) {
+    for (let coin of rawCoinData) {
         let relevantCoinData = {
             "id": coin.id ? coin.id : "???",
             "symbol": coin.symbol ? coin.symbol : "?",
@@ -155,25 +165,25 @@ function prepareCoinTable(coinDataFromCoingeko) {
     return {"coins": myCoinData}
   }
   catch (errMsg){
-    throw ("In prepareCoinTable(coinDataFromCoingeko): " + errMsg)
+    throw ("In prepareCoins(rawCoinData): " + errMsg)
   }
 }
 
-function prepareListOfSupportedCurrencies(currencies) {
+function prepareSupportedCurrencies(rawCurrencyData) {
   try {
     // No preprocessing of list at present, so return all currencies
-    return {"currencies_supported": currencies}
+    return {"currencies_supported": rawCurrencyData}
   }
   catch (errMsg){
-    throw ("In prepareListOfSupportedCurrencies(currencies): " + errMsg)
+    throw ("In prepareSupportedCurrencies(rawCurrencyData): " + errMsg)
   }
 }
 
-function prepareListOfAllCoins(allCoinsFromCoinGeko) {
+function prepareListOfAllCoins(rawCoinList) {
   try {
     const coinList = { all_the_coins : [] }
 
-    $.each(allCoinsFromCoinGeko, function (index, coin) {
+    $.each(rawCoinList, function (index, coin) {
       // Add a nameline (to support future display and coin search)
       coin.nameLine = `${coin.name} (${coin.symbol})`
       coinList.all_the_coins[index] = coin
@@ -182,7 +192,7 @@ function prepareListOfAllCoins(allCoinsFromCoinGeko) {
     return coinList
   }
   catch (errMsg){
-    throw ("In prepareListOfAllCoins(data): " + errMsg)
+    throw ("In prepareListOfAllCoins(rawCoinList): " + errMsg)
   }
 }
 
@@ -207,20 +217,69 @@ function prepareListOfTrendingCoinSearches(trendingSearchesFromCoinGeko) {
   }
 }
 
-
-async function getCoinTableData(coinCriteria) {
+function prepareExchanges(rawExchangeData) {
   try {
-    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinCriteria)
+    // Select relevant exchange data, adding fallback values for missing data
+    let myExchanges = []
+    for (let exchange of rawExchangeData) {
+        let relevantExchange = {
+            "id": exchange.id ? exchange.id : "???",
+            "name": exchange.name ? exchange.name : "???",
+            "year_established": Number.isFinite(exchange.year_established) ?
+                                                exchange.year_established : NaN,
+            "country": exchange.country ? exchange.country : "Unknown",
+            "description": exchange.description ? exchange.description : "Unavailable",
+            "url": exchange.url ? exchange.url : "Unknown",
+            "image": exchange.image ? exchange.image : "",  // Use "//:0" instead of ""?
+            "has_trading_incentive": exchange.has_trading_incentive ?
+                                     exchange.has_trading_incentive : "Unknown",
+            "trust_score": Number.isFinite(exchange.trust_score) ? exchange.trust_score : NaN,
+            "trust_score_rank": Number.isFinite(exchange.trust_score_rank) ?
+                                                exchange.trust_score_rank : NaN,
+            "trade_volume_24h_btc": Number.isFinite(exchange.trade_volume_24h_btc) ?
+                                                                exchange.trade_volume_24h_btc : NaN,
+            "trade_volume_24h_btc_normalized": Number.isFinite(exchange.trade_volume_24h_btc_normalized) ? 
+                                                                exchange.trade_volume_24h_btc_normalized : NaN 
+        }
+        myExchanges.push(relevantExchange)
+    }
+    return {"exchanges": myExchanges}
+  }
+  catch (errMsg){
+    throw ("In prepareExchanges(rawExchangeData): " + errMsg)
+  }
+}
+
+
+async function getCoinTableData(coinsCriteria) {
+  try {
+    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinsCriteria)
 
     // Fetch the coin data
     const callUrl = await fetch(urlCoinsMarketApi)
     const response = await callUrl.json()
     const data = await response
 
-    return prepareCoinTable( data )
+    return prepareCoins(data)
   }
   catch (errMsg){
-    throw ("In getCoinTableData(coinCriteria): " + errMsg)
+    throw ("In getCoinTableData(coinsCriteria): " + errMsg)
+  }
+}
+
+async function getExchangeTableData(criteria) {
+  try {
+    const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria)
+
+    // Fetch the exchanges data
+    const callUrl = await fetch(urlExchangesApi)
+    const response = await callUrl.json()
+    const data = await response
+
+    return prepareExchanges(data)
+  }
+  catch (errMsg){
+    throw ("In getExchangeTableData(criteria): " + errMsg)
   }
 }
 
@@ -229,7 +288,7 @@ async function getCoinTableData(coinCriteria) {
 
 async function getTheCoinPageData(coinCriteria) {
   try {
-    // Get the external datafor the Coin page
+    // Get the external data for the Coin page
     const coinPage = await getExternalDataForCoinPage(coinCriteria)
     
     // Add any other data required by the Coin Page
@@ -340,13 +399,6 @@ function prepareCoinInformation(coinFromCoinGeko, currencies){
         if ( !Number.isFinite( coin.market_data.price_change_percentage_1h_in_currency[currency]) ){
             coin.market_data.price_change_percentage_1h_in_currency[currency] = NaN
         }
-
-        // Add others here as necessary: EG.
-          // current_price[currency], atl[currency], ath[currency], ath_change_percentage[currency],
-          // atl_change_percentage[currency], market_cap[currency], fully_diluted_valuation[currency],
-          // total_volume[currency], low_24hr[currency], high_24hr[currency],
-          // market_cap_change_24h_in_currency[currency],
-          // market_cap_change_percentage_24h_in_currency[currency]
     }
     
     // Set fallback value (to NaN) on other (non-currency dependent) statistics
