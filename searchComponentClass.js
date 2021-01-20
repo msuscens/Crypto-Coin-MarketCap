@@ -28,10 +28,6 @@ class SearchComponent {
                                           </ul>
                                       </form>
                                     </div>`
-/*  *** TODO : Add search icon into input text box                                 
-        Use method 3 from: https://stackoverflow.com/questions/35821279/positioning-an-image-inside-a-text-input-box/35821416
-        <a href="#"><image src="" <i class="fas fa-search"></i> alt=img style="width:50px; height:50px;"></a>
-*/
         $(`#${this._data.idSC}`).html(searchComponentHtml)
   
         // Add event lisenters to the search component:

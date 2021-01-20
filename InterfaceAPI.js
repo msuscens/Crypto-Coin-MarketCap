@@ -6,8 +6,9 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-
-// Global Object for getting CoinGeko API endpoint urls
+//
+// CoinGeko API endpoint urls
+//
 const API_ENDPOINTS = {
     _BASE_URL: "https://api.coingecko.com/api/v3",
 
@@ -36,7 +37,7 @@ const API_ENDPOINTS = {
                 "&community_data=true&developer_data=true&sparkline=false"
         return (this._BASE_URL + COIN_ENDPOINT)
     },
-    getMarketChartUrl: function(criteria) {
+    getCoinMarketChartUrl: function(criteria) {
         const startDate = getPreviousDate(criteria.graphStartDaysAgo)
         const startUnixTimestamp =  Math.floor(startDate.getTime() / 1000)
         const endUnixTimestamp = Math.floor(Date.now() / 1000)
@@ -56,18 +57,28 @@ const API_ENDPOINTS = {
           "?per_page=" + criteria.rowsPerPage +
           "&page=" + criteria.currentPageNumber
       return (this._BASE_URL + EXCHANGES_ENDPOINT)
+    },
+    getExchangeVolumeAndTickersUrl: function(criteria) {
+      const EXCHANGE_ENDPOINT = "/exchanges/" + criteria.exchangeId
+      return (this._BASE_URL + EXCHANGE_ENDPOINT)
+    },
+    getExchangeVolumeChartUrl: function(criteria) {
+      const VOLUME_CHART_ENDPOINT = "/exchanges/" + criteria.exchangeId + 
+                                  "/volume_chart?days=" + criteria.graphStartDaysAgo       
+      return (this._BASE_URL + VOLUME_CHART_ENDPOINT)
   }
 }
 
-// FUNCTIONS FOR OBTAINING THE INDEX (HOME) PAGE DATA
-
+//
+// FUNCTIONS FOR OBTAINING AND PREPARING DATA FOR THE INDEX (HOME) PAGE
+//
 async function getTheIndexPageData(criteria) {
   try {
     // Get the external data for the Index page
-    const indexPage = await getExternalDataForIndexPage(criteria)
+    const indexPage = await getApiDataForIndexPage(criteria)
 
-    // Set any other data required by page (ie. add to indexPage object) 
-    // *** None required at present ***
+    // Add supplementary data required by index page here ...
+    // (None required at present)
 
     return indexPage
   }
@@ -76,15 +87,13 @@ async function getTheIndexPageData(criteria) {
   }
 }
 
-async function getExternalDataForIndexPage(criteria) {
+async function getApiDataForIndexPage(criteria) {
   try {
     // Get API URLs (for calls to CoinGeko),
-    // For Coins:
     const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(criteria.coins)     
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl() 
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
-    // For Exchanges:
     const urlListAllExchangesApi = API_ENDPOINTS.getListAllExchangesUrl()
     const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.exchanges)     
 
@@ -94,7 +103,8 @@ async function getExternalDataForIndexPage(criteria) {
     // Await for receipt and decoding of all data (before returning data set)
     await Promise.all([ fetch(urlCoinsMarketApi), fetch(urlSupportedCurrenciesApi),
                         fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi),
-                        fetch(urlExchangesApi), fetch(urlListAllExchangesApi) ]
+                        fetch(urlExchangesApi)
+                      ]
     ).then(function (responses) {
 
         // Get a JSON object from all the responses (mapping each into an array)
@@ -106,25 +116,24 @@ async function getExternalDataForIndexPage(criteria) {
         indexPageData = collateIndexPage(data)
     })
     .catch(function (errMsg) {
-        throw("Error in getExternalDataForIndexPage(criteria): " + errMsg)
+        throw("Error from async promise.all code: " + errMsg)
     })
 
     return indexPageData
   }
   catch (errMsg){
-    throw ("In getExternalDataForIndexPage(criteria): " + errMsg)
+    throw ("In getApiDataForIndexPage(criteria): " + errMsg)
   }
 }
 
 function collateIndexPage(rawCoinGekoData){
+// Collates data required by index page, processing raw data from api returns
   try {
-    // Prepare and collate data required by index page
     const indexPageData = { ... prepareCoins(rawCoinGekoData[0]),
                             ... prepareSupportedCurrencies(rawCoinGekoData[1]),
                             ... prepareListOfAllCoins(rawCoinGekoData[2]),
                             ... prepareListOfTrendingCoinSearches(rawCoinGekoData[3]),
-                            ...prepareExchanges(rawCoinGekoData[4]),
-//                            ...prepareListOfAllExchanges(rawCoinGekoData[5])
+                            ... prepareExchanges(rawCoinGekoData[4]),
                           }
     return indexPageData
   }
@@ -134,8 +143,8 @@ function collateIndexPage(rawCoinGekoData){
 }
 
 function prepareCoins(rawCoinData) {
+// Select relevant coin data, adding fallback values for missing or invalid data
   try {
-    // Select relevant coin data, adding fallback values for missing data
     let myCoinData = []
     for (let coin of rawCoinData) {
         let relevantCoinData = {
@@ -171,7 +180,7 @@ function prepareCoins(rawCoinData) {
 
 function prepareSupportedCurrencies(rawCurrencyData) {
   try {
-    // No preprocessing of list at present, so return all currencies
+    // No preprocessing of raw currency data
     return {"currencies_supported": rawCurrencyData}
   }
   catch (errMsg){
@@ -183,8 +192,8 @@ function prepareListOfAllCoins(rawCoinList) {
   try {
     const coinList = { all_the_coins : [] }
 
+    // Add a nameline to each coin (to support future display and coin search)
     $.each(rawCoinList, function (index, coin) {
-      // Add a nameline (to support future display and coin search)
       coin.nameLine = `${coin.name} (${coin.symbol})`
       coinList.all_the_coins[index] = coin
     })
@@ -218,8 +227,8 @@ function prepareListOfTrendingCoinSearches(trendingSearchesFromCoinGeko) {
 }
 
 function prepareExchanges(rawExchangeData) {
+// Select relevant exchange data, adding fallback values for missing or invalid data
   try {
-    // Select relevant exchange data, adding fallback values for missing data
     let myExchanges = []
     for (let exchange of rawExchangeData) {
         let relevantExchange = {
@@ -230,7 +239,7 @@ function prepareExchanges(rawExchangeData) {
             "country": exchange.country ? exchange.country : "Unknown",
             "description": exchange.description ? exchange.description : "Unavailable",
             "url": exchange.url ? exchange.url : "Unknown",
-            "image": exchange.image ? exchange.image : "",  // Use "//:0" instead of ""?
+            "image": exchange.image ? exchange.image : "",  
             "has_trading_incentive": exchange.has_trading_incentive ?
                                      exchange.has_trading_incentive : "Unknown",
             "trust_score": Number.isFinite(exchange.trust_score) ? exchange.trust_score : NaN,
@@ -250,67 +259,55 @@ function prepareExchanges(rawExchangeData) {
   }
 }
 
-
-async function getCoinTableData(coinsCriteria) {
+async function getCoinTableData(criteria) {
   try {
-    const urlCoinsMarketApi = API_ENDPOINTS.getCoinsMarketUrl(coinsCriteria)
-
-    // Fetch the coin data
-    const callUrl = await fetch(urlCoinsMarketApi)
-    const response = await callUrl.json()
-    const data = await response
-
-    return prepareCoins(data)
+    const url = API_ENDPOINTS.getCoinsMarketUrl(criteria)
+    const coins = prepareCoins( await fetchApiData(url) )
+    return coins
   }
   catch (errMsg){
-    throw ("In getCoinTableData(coinsCriteria): " + errMsg)
+    throw ("In getCoinTableData(criteria): " + errMsg)
   }
 }
 
 async function getExchangeTableData(criteria) {
   try {
-    const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria)
-
-    // Fetch the exchanges data
-    const callUrl = await fetch(urlExchangesApi)
-    const response = await callUrl.json()
-    const data = await response
-
-    return prepareExchanges(data)
+    const url = API_ENDPOINTS.getExchangesUrl(criteria)
+    const exchanges = prepareExchanges( await fetchApiData(url) )
+    return exchanges
   }
   catch (errMsg){
     throw ("In getExchangeTableData(criteria): " + errMsg)
   }
 }
 
-
-// FUNCTIONS FOR OBTAINING THE COIN PAGE DATA
-
-async function getTheCoinPageData(coinCriteria) {
+//
+// FUNCTIONS FOR OBTAINING AND PREPARING DATA FOR THE COIN DETAILS PAGE
+//
+async function getTheCoinDetailsPageData(criteria) {
   try {
-    // Get the external data for the Coin page
-    const coinPage = await getExternalDataForCoinPage(coinCriteria)
+    const coinDetailsPage = await getApiDataForCoinDetailsPage(criteria)
     
-    // Add any other data required by the Coin Page
-    coinPage.currency_id = coinCriteria.currencyId.toLowerCase()
+    // Add supplementary data required by coin details page
+    coinDetailsPage.currency_id = criteria.currencyId.toLowerCase()
 
-    return coinPage
+    return coinDetailsPage
   }
   catch (errMsg){
-    throw ("Error from InterfaceAPI.js getTheCoinPageData(coinCriteria): " + errMsg)
+    throw ("Error from InterfaceAPI.js getTheCoinDetailsPageData(criteria): " + errMsg)
   }
 }
 
-async function getExternalDataForCoinPage(coinCriteria) {
+async function getApiDataForCoinDetailsPage(criteria) {
   try {
     // Get API URLs (for calls to CoinGeko)
-    const urlCoinApi = API_ENDPOINTS.getCoinUrl( coinCriteria )
-    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl( coinCriteria )
+    const urlCoinApi = API_ENDPOINTS.getCoinUrl( criteria )
+    const urlMarketChartApi = API_ENDPOINTS.getCoinMarketChartUrl( criteria )
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl()
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
     
-    let coinPageData = {}
+    let coinDetailsPageData = {}
 
     // Fetch all the data (via multiple simulataneous api calls)
     // Await for receipt and decoding of all data (before returning data set)
@@ -324,25 +321,24 @@ async function getExternalDataForCoinPage(coinCriteria) {
         }))
     }).then(function (data) {
         // Preprocess and collate returned API data (so that its ready for use by Coin page)
-        coinPageData = collateCoinPage(data)
+        coinDetailsPageData = collateCoinPage(data)
     })
     .catch(function (errMsg) {
-        throw("Error in getExternalDataForCoinPage(coinCriteria): " + errMsg)
+        throw(errMsg)
     })
 
-    return coinPageData
+    return coinDetailsPageData
   }
   catch (errMsg){
-    throw ("In getExternalDataForCoinPage(coinCriteria): " + errMsg)
+    throw ("In getApiDataForCoinDetailsPage(criteria): " + errMsg)
   }
 }
 
-
-function collateCoinPage(rawCoinGekoData){
+function collateCoinPage(rawCoinGekoData) {
+// Prepare and collate data for the Coin page
   try {
-    // Prepare and collate data required by the Coin page
     const coinPageData =  { ... prepareCoinInformation(rawCoinGekoData[0], rawCoinGekoData[2]),
-                            ... preparePriceGraph(rawCoinGekoData[1]),
+                            ... prepareCoinPriceGraph(rawCoinGekoData[1]),
                             ... prepareListOfAllCoins(rawCoinGekoData[3]),
                             ... prepareListOfTrendingCoinSearches(rawCoinGekoData[4])
                           }
@@ -353,18 +349,15 @@ function collateCoinPage(rawCoinGekoData){
   }
 }
 
-// FUNCTIONS TO COLLATE & AUGMENT COINGEKO API RETURN DATA INTO APPLICATIONS DATASTRUCTURE FORMAT
-
 function prepareCoinInformation(coinFromCoinGeko, currencies){
   try {
-    // For now, take all the coin data unproceessed
     let coin = coinFromCoinGeko   
     coin.market_data.currencies_supported = currencies
 
     // Remove unwanted data - only if not willing to keep in our data object
     // (ie. 'delete coin.unwanted_property')
 
-    // Set fallback values (for any key properties that are missing data values)
+    // Set fallback values (for any key properties that are missing or have invalid data values)
     if (!coin.id) coin.id = "???"
     if (!coin.symbol) coin.symbol = "?"
     if (!coin.name) coin.name = "???"
@@ -416,10 +409,9 @@ function prepareCoinInformation(coinFromCoinGeko, currencies){
   }
 }
 
-
-// FUNCTIONS FOR THE PRICE CHART DATA
-
-function preparePriceGraph(marketChartDataFromCoinGeko) {
+// FUNCTIONS FOR THE PRICE GRAPH DATA (ON COIN DETAILS PAGE)
+//
+function prepareCoinPriceGraph(marketChartDataFromCoinGeko) {
   try {
     const graphData = {
         price_graph: {
@@ -429,7 +421,6 @@ function preparePriceGraph(marketChartDataFromCoinGeko) {
     }
     // Obtain x & y data points (of dates & prices)
     const pricesTable = [marketChartDataFromCoinGeko.prices]
-
     pricesTable[0].forEach(row => {
         const date = new Date(row[0])
         graphData.price_graph.xs.push(date.toLocaleDateString())
@@ -440,25 +431,266 @@ function preparePriceGraph(marketChartDataFromCoinGeko) {
     return graphData
   }
   catch (errMsg){
-    throw ("In preparePriceGraph(marketChartDataFromCoinGeko): " + errMsg)
+    throw ("In prepareCoinPriceGraph(marketChartDataFromCoinGeko): " + errMsg)
   }
 }
 
 async function getCoinGraphData(coinCriteria) {
   try {
-    const urlMarketChartApi = API_ENDPOINTS.getMarketChartUrl(coinCriteria)
+    const url = API_ENDPOINTS.getCoinMarketChartUrl(coinCriteria)
+    const graph = prepareCoinPriceGraph( await fetchApiData(url) )
+    return graph
+  }
+  catch (errMsg){
+    throw ("In getCoinGraphData(coinCriteria): " + errMsg)
+  }
+}
 
-    // Fetch the market data, decode into JSON format
-    const callUrl = await fetch(urlMarketChartApi)
-    const response = await callUrl.json()
-    const data = await response
+//
+// FUNCTIONS FOR OBTAINING AND PREPARING DATA FOR THE EXCHANGE DETAILS PAGE
+//
+async function getTheExchangeDetailsPageData(criteria) {
+  try {
+    // Get the external data for the Index page
+    const exchangeDetailsPage = await getApiDataForExchangeDetailsPage(criteria)
 
-    // All data is now available:
-    const graphData = preparePriceGraph( data )
+    // Add supplementary data required by exchange details page 
+    exchangeDetailsPage.id = criteria.table.exchangeId
+
+    return exchangeDetailsPage
+  }
+  catch (errMsg){
+    throw ("Error from InterfaceAPI.js getTheExchangeDetailsPageData(criteria): " + errMsg)
+  }
+}
+
+async function getApiDataForExchangeDetailsPage(criteria) {
+  try {
+    // Get API URLs (for calls to CoinGeko)
+    const urlExchangeVolumeAndTickersApi = API_ENDPOINTS.getExchangeVolumeAndTickersUrl(criteria.table)
+    const urlExchangeVolumeChartApi = API_ENDPOINTS.getExchangeVolumeChartUrl(criteria.graph)
+    const urlListAllExchangesApi = API_ENDPOINTS.getListAllExchangesUrl()
+    const urlMostTrustedExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.searchSuggestions)     
+
+    let exchangeDetailsPageData = {}
+
+    // Fetch all the data (via multiple simulataneous api calls)
+    // Await for receipt and decoding of all data (before returning data set)
+    await Promise.all([ fetch(urlExchangeVolumeAndTickersApi), fetch(urlExchangeVolumeChartApi),
+                        fetch(urlListAllExchangesApi), fetch(urlMostTrustedExchangesApi) ]
+    ).then(function (responses) {
+
+        // Get a JSON object from all the responses (mapping each into an array)
+        return Promise.all(responses.map(function (response) {
+            return response.json()
+        }))
+    }).then(function (data) {
+
+        // Preprocess and collate data
+        exchangeDetailsPageData = collateExchangeDetailsPage(data)
+    })
+    .catch(function (errMsg) {
+        throw(errMsg)
+    })
+
+    return exchangeDetailsPageData
+  }
+  catch (errMsg){
+    throw ("In getApiDataForExchangeDetailsPage(criteria): " + errMsg)
+  }
+}
+
+function collateExchangeDetailsPage(rawCoinGekoData){
+  try {
+    // Prepare and collate data required by page
+    const exchangeDetailsPageData = { ... prepareExchangeInformation(rawCoinGekoData[0]),
+                                      ... prepareGraphData(rawCoinGekoData[1]),
+                                      ... prepareListOfAllExchanges(rawCoinGekoData[2]),
+                                      ... prepareListExchangesWithHighestTrustScore(rawCoinGekoData[3])
+                                    }
+    return exchangeDetailsPageData
+  }
+  catch (errMsg){
+    throw ("In collateExchangeDetailsPage(rawCoinGekoData): " + errMsg)
+  }
+}
+
+function prepareExchangeInformation(exchangeVolumeAndTickerCoingekoData) {
+  try {
+    // For now, take all the exchange data unproceessed
+    let exchange = exchangeVolumeAndTickerCoingekoData   
+
+    // Remove unwanted data here (if not willing to keep in our data object)
+    // (ie. 'delete exchange.unwanted_property')
+
+    // Set fallback values (for key properties missing appropriate values)
+    if (!exchange.name) exchange.name = "???"
+    if (!Number.isFinite(exchange.year_established)) exchange.year_established = NaN
+    if (!exchange.country) exchange.country = "Country Unknown"
+    if (!exchange.description) exchange.description = "Not available"
+    if (!exchange.url) exchange.url = "Not available"
+    if (!exchange.image) exchange.image = "" 
+    if (typeof exchange.has_trading_incentive !== "boolean") exchange.has_trading_incentive = "Unknown"
+    if (typeof exchange.centralized !== "boolean") exchange.centralized = "Unknown"
+    if (!Number.isFinite(exchange.trust_score)) exchange.trust_score = NaN
+    if (!Number.isFinite(exchange.trust_score_rank)) exchange.trust_score_rank = NaN
+    if (!Number.isFinite(exchange.trade_volume_24h_btc)) exchange.trade_volume_24h_btc = NaN
+    if (!Number.isFinite(exchange.trade_volume_24h_btc_normalized)) exchange.trade_volume_24h_btc_normalized = NaN
+
+    // Set fallback values for trading pair data
+    exchange.tickers = prepareTickers(exchangeVolumeAndTickerCoingekoData.tickers)
+
+    return exchange
+  }
+  catch (errMsg){
+    throw ("In prepareExchangeInformation(exchangeVolumeAndTickerCoingekoData): " + errMsg)
+  }
+}
+
+function prepareTickers(tickerCoingekoData) {
+// Set fallback value for each of the tickers (in the .tickers object)
+  try {
+    const tickers = tickerCoingekoData
+    for (let i=0; i<tickers.length; i++)
+    {
+      tickers[i].import_order = i + 1  // new attribute for application
+
+      if (!tickers[i].base) tickers[i].base = "???"
+      if (!tickers[i].target) tickers[i].target = "???"
+
+      // Set fallbacks for market object attributes:
+      //  "market": {
+      //    "name": "Coinbase Pro",
+      //    "identifier": "gdax",
+      //    "has_trading_incentive": false
+      //  },
+
+      if (!Number.isFinite(tickers[i].last)) tickers[i].last = NaN
+      if (!Number.isFinite(tickers[i].volume)) tickers[i].volume = NaN
+
+      // Set fallbacks for converted_last object attributes:
+      //  "converted_last": {
+      //    "btc": 0.99962016,
+      //    "eth": 28.908702,
+      //    "usd": 35383
+      //  },
+
+      // Set fallbacks for converted_volume object attributes:
+      //  "converted_volume": {
+      //    "btc": 19827,
+      //    "eth": 573394,
+      //    "usd": 701816809
+      // },
+
+      // Set fallbacks for following attributes:
+      /*  
+      "trust_score": "green",
+      */
+     if (!Number.isFinite(tickers[i].bid_ask_spread_percentage)) tickers[i].bid_ask_spread_percentage = NaN
+      /*
+      "timestamp": "2021-01-17T13:26:55+00:00",
+      "last_traded_at": "2021-01-17T13:26:55+00:00",
+      "last_fetch_at": "2021-01-17T13:26:55+00:00",
+      "is_anomaly": false,
+      "is_stale": false,
+      "trade_url": "https://pro.coinbase.com/trade/BTC-USD",
+      "token_info_url": null,
+      "coin_id": "bitcoin"
+      */
+    }
+    return tickers
+  }
+  catch (errMsg){
+    throw ("In prepareTickers(tickerCoingekoData): " + errMsg)
+  }
+}
+
+// FUNCTIONS FOR THE TRADING VOLUME GRAPH DATA (ON EXCAHNGE DETAILS PAGE)
+//
+// *** TODO: Refactor function below (and coin details page use of prepareCoinPriceGraph())
+// *** so that it can be used for both Coin price graph and Exchange Volume graph
+function prepareGraphData(rawChartCoingekoData) {
+  try {
+    const graphData = {
+      graph: {
+          xs: [],
+          ys: [],
+          chart_data_unprocessed : []
+      }
+    }
+    graphData.graph.chart_data_unprocessed = rawChartCoingekoData
+
+    // Obtain x & y data points (of dates & prices)
+    const rawChartTable = [rawChartCoingekoData]
+
+    rawChartTable[0].forEach(row => {
+        const date = new Date(row[0])
+        graphData.graph.xs.push(date.toLocaleDateString())
+        const value = parseFloat(row[1])
+        graphData.graph.ys.push(value)
+    })
 
     return graphData
   }
   catch (errMsg){
-    throw ("In getCoinGraphData(coinCriteria): " + errMsg)
+    throw ("In prepareGraphData(rawChartCoingekoData): " + errMsg) 
+  }
+}
+
+function prepareListOfAllExchanges(listOfAllExchangesCoingekoData) {
+  try {
+    const listAllExchanges = { all_the_exchanges : [] }
+
+    // Add a nameline for each exchange (to support future display and exchange search)
+    $.each(listOfAllExchangesCoingekoData, function (index, exchange) {
+      exchange.nameLine = `${exchange.name} (${exchange.id})`
+      listAllExchanges.all_the_exchanges[index] = exchange
+    })
+
+    return listAllExchanges
+  }
+  catch (errMsg){
+    throw ("In prepareListOfAllExchanges(listOfAllExchangesCoingekoData): " + errMsg)
+  }
+}
+
+function prepareListExchangesWithHighestTrustScore(highestTrustScoringExchangesCoingekoData) {
+  try {
+    const trustedExchangesList = { exchanges_with_highest_trustscore : [] } 
+
+    $.each(highestTrustScoringExchangesCoingekoData, function (index, exchange) {
+      let trustedExchange = {
+        "id": exchange.id ? exchange.id : "???",
+        "name": exchange.name ? exchange.name : "???",
+        "image": exchange.image ? exchange.image : "",  
+        "trust_score": Number.isFinite(exchange.trust_score) ? exchange.trust_score : NaN
+      }
+      // Add a nameline (to support future display)
+      trustedExchange.nameLine = `${trustedExchange.name} (${trustedExchange.id}) [${trustedExchange.trust_score}/10]`
+
+      trustedExchangesList.exchanges_with_highest_trustscore[index] = trustedExchange
+    })
+
+    return trustedExchangesList
+  }
+  catch (errMsg){
+    throw ("In prepareListExchangesWithHighestTrustScore(highestTrustScoringExchangesCoingekoData): " + errMsg)
+  }
+}
+
+
+async function getExchangeData(criteria) {
+  try {
+    const url = API_ENDPOINTS.getExchangeVolumeAndTickersUrl(criteria)
+    const data = await fetchApiData(url)
+    let exchange = prepareExchangeInformation(data)
+
+    // Add supplementry data required by page
+    exchange.id = criteria.exchangeId
+
+    return exchange
+  }
+  catch (errMsg){
+    throw ("In getExchangeData(criteria): " + errMsg)
   }
 }

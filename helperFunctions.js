@@ -3,7 +3,7 @@
 const currencyCookie = "CoinPriceCurrencyCookie"
 const cookieDurationInSeconds = 1209600   // 2 weeks
 
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS - 
 
 // Use to initialise a currency formatter function,
 // E.g. const currency2DP = newCurrencyFormater("USD", 2)
@@ -18,7 +18,7 @@ function newCurrencyFormater(currencyType, decimalPlaces) {
     return formatter
   }
   catch(errMsg){
-    throw("In newCurrencyFormater(currencyType, decimalPlaces): " + errMsg)
+    throw("HelperFunctions.js: In newCurrencyFormater(currencyType, decimalPlaces): " + errMsg)
   }
 }
 
@@ -31,7 +31,7 @@ function sumMarketCap(myCoins) {
     return sum
   }
   catch(errMsg){
-    throw("In sumMarketCap(myCoins): " + errMsg)
+    throw("HelperFunctions.js: In sumMarketCap(myCoins): " + errMsg)
   }
 }
 
@@ -46,7 +46,7 @@ function cssColorForNumber(number) {
     return "color:" + color
   }
   catch(errMsg){
-    throw("In cssColorForNumber(number): " + errMsg)
+    throw("HelperFunctions.js: In cssColorForNumber(number): " + errMsg)
   }
 }
 
@@ -82,7 +82,7 @@ function createCompareFunctionBody(object, attribute, sortOrder) {
     return functionBody
   }
   catch(errMsg){
-    throw("In createCompareFunctionBody(object, attribute, sortOrder): " + errMsg)
+    throw("HelperFunctions.js: In createCompareFunctionBody(object, attribute, sortOrder): " + errMsg)
   }
 }
 
@@ -96,7 +96,7 @@ function getPreviousDate(numDaysAgo) {
     return previousDate
   }
   catch(errMsg){
-    throw("In getPreviousDate(numDaysAgo): " + errMsg)
+    throw("HelperFunctions.js: In getPreviousDate(numDaysAgo): " + errMsg)
   }
 }
 
@@ -109,7 +109,7 @@ function getDaysAgo(prevoiusDate) {
     return numDaysAgo
   }
   catch(errMsg){
-    throw("In getDaysAgo(prevoiusDate): " + errMsg)
+    throw("HelperFunctions.js: In getDaysAgo(prevoiusDate): " + errMsg)
   }
 }
 
@@ -130,7 +130,7 @@ function getParamFromUrl(url, paramId) {
     return param
   }
   catch(errMsg){
-    throw("In getParamFromUrl(url, paramId): " + errMsg)
+    throw("HelperFunctions.js: In getParamFromUrl(url, paramId): " + errMsg)
   }
 }
 
@@ -143,10 +143,22 @@ function getCurrencySymbol(currencyId){
     return symbol
   }
   catch(errMsg){
-    throw("In getCurrencySymbol(currencyId): " + errMsg)
+    throw("HelperFunctions.js: In getCurrencySymbol(currencyId): " + errMsg)
   }
 }
 
+async function fetchApiData(url) {
+  try {
+      // Fetch the coin data
+      const callUrl = await fetch(url)
+      const response = await callUrl.json()
+      const data = await response
+      return data
+  }
+  catch(errMsg){
+    throw("HelperFunctions.js: In async fetchApiData(url): " + errMsg)
+  }
+}
 
 // Cookie Helper functions - courtesy of Kenneth
 

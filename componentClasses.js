@@ -176,3 +176,40 @@ class CoinSearchComponent extends SearchComponent {
     }
   }
 }
+
+//
+// Exchange Search Component
+//
+class ExchangeSearchComponent extends SearchComponent {
+  
+  _createHtmlForListItem(suggestionOrSearchData, dataIndex) {
+    // Implementation for to create Exchange list item HTML (ie. a single list item). 
+    // This method overides the superclass method of the same name (ie. in the SearchComponent class).
+    try {
+      const exchangeId = suggestionOrSearchData[dataIndex].id
+      const listItemText = suggestionOrSearchData[dataIndex].nameLine
+      const listItemHtml = `<li><a href="exchange.html?exchangeid=${exchangeId}"> ${listItemText} </a></li>`
+      return listItemHtml
+    }
+    catch (errMsg){
+      throw ("ExchangeSearchComponent error in _createHtmlForListItem(suggestionOrSearchData, dataIndex): " + errMsg)
+    }
+  }
+  
+  _listItemClickEvent(searchComponent, event) {
+    // Implementation for a click event on a Exchange Search List Item. 
+    // This method overides the superclass method of the same name (ie. in the SearchComponent class).
+    try{    
+      const exchangeDetailsPageUrl = event.target.href 
+
+      // Reset input and search list (in case user goes 'back' in browser)
+      super._listItemClickEvent( searchComponent, event)
+  
+      // Goto Coin Page
+      window.location.href = exchangeDetailsPageUrl
+    }
+    catch (errMsg){
+      throw ("ExchangeSearchComponent error in _listItemClickEvent(searchComponent, event) " + errMsg)
+    }
+  }
+}

@@ -8,21 +8,31 @@ you to the coin details page, or alternatively use the coin search. There's a cu
 This project was developed by Mark Suscens as a learning project (to employ HTML, CSS, Bootstrap, JQuery and JavaScript).
 
 The code is organised as follows:
-- interfaceAPI.js : Obtains all external data (via API calls), handling missing data and collating into
-                    data structure expected by the index and coin pages
-- index.html      : Home page, that displays the table of coins with price data and Exchanges table
-- indexLogic.js   : Home page javascript code (including adding dynamically created components 
-                    such as the coin search component)
-- coin.html       : Coin details page; displays a coin price graph and various coin statistics 
-- coinLogic.html  : Coin pages dynamic code (javascript)
-- styles.css      : The css styles for the project, i.e the index and coin pages
+- interfaceAPI.js   : Obtains the application data (via API calls), handling missing data and
+                      collating into structure expected by the index, coin, and exchange pages
+- index.html        : Home page that present coin price and exchanges.
+- indexLogic.js     : Home page javascript code (including adding dynamically created components, 
+                      eg. coin search component)
+- coin.html         : Coin details page; displays a coin price graph and coin statistics 
+- coinLogic.js      : Coin details page dynamic code (javascript)
+- exchange.html     : Exchange details page; displays a trading volume graph and trading pairs table 
+- exchange.js       : Exchange details page's dynamic code (javascript)
 
-- components.js   : Custom dynamic components used on the index and coin pages. Includes the coin search
-                    object (which inherits from and overides the search component)
-- searchComponent.js : Search Component Super Class, that is parent object for the coin search component
+- styles.css        : The css styles for the project, i.e the index and coin pages
+
+- tableFunctions.js : Event handling functions used for all tables in application for table
+                    column sorting, paging and table data reload (refresh)
+
+- componentClassess.js      : Custom dynamic components. Includes the coin search, exchange search and
+                              currency selector components (used on the index, coin, and exchange pages)
+- searchComponentClass.js   : Search Component Super Class, that is parent object for the coin search 
+                              component
 - searchComponentStyles.css : The css styles for the Serach Component super class
 
-- helpers.js : Functions that support implementation of page logic (but are application specific).
+
+
+
+- helperFunctions.js : Functions supporting page logic implementaion (but are not application specific).
 
 
 Note: Requires local server to be running, eg. in terminal window:
@@ -35,11 +45,10 @@ Project Status:  The project is under development but is functional, using live 
 
 Next Steps:
   i) Refine styling of the index and coin details page
- ii) Add an 'exchange details' page (similar to 'coin details' page)
-iii) Add an Exchange Search onto the home page - that takes user to 'exchange details' page.
- iv) Create a new git/gitHub repository for the 'Search Component' superclass, together with    
-    documentation for other developers on usage to create their own derived search components.
-    (A rough draft of such documemtation is in APPENDIX below.)
+ ii) Add an Exchange Search onto the home page - that takes user to 'exchange details' page.
+iii) Consider creating a new git/gitHub repository for the 'Search Component' superclass,
+     together with developer documentation on implementation to create own derived search components.
+    (A rough first draft of such documemtation is in APPENDIX below.)
 
 ___________________________________________________________________
 

@@ -8,7 +8,7 @@
   <meta name="description" content="Crypto Coin Market">
   <meta name="author" content="Mark Suscens">
 
-  <title>Coin Prices</title>
+  <title>Crypto-Assets</title>
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
@@ -68,26 +68,17 @@
         <!-- Coins tab content-->
         <div class="tab-pane fade show active" id="coinsNavTabArea" role="tabpanel" aria-labelledby="coins-tab">
 
-          <!-- Sync (Refresh) button and Currency Selector control -->
           <div class="row">
             <div class="col-sm-6" align="left">
-              <!--
-              <div class="btn-group">
-                <button class="btn btn-light mr-3" onclick="reloadCoinData()">
-                        <i class="fas fa-sync-alt"></i> Sync</button>
-
-                <div id="currencySelectorComponent"></div> 
-              </div>
-              -->
             </div>
 
-            <!-- Paging controls (above the Coins table) -->
+            <!-- Controls (above the Coins table): Currency Selector, Refresh, Paging -->
             <div class="col-sm-6" align="right">
               <div class="btn-group mt-n5">
                 
                 <div id="currencySelectorComponent"></div>  <!-- Component placeholder  -->
 
-                <button class="btn btn-light ml-4" onclick="reloadCoinData()">
+                <button class="btn btn-light ml-4" onclick="loadFirstPageIntoTable('coinsNavTabArea')">
                           <i class="fas fa-sync-alt"></i></button>
   
                 <nav aria-label="Next and Prevous page controls for the coin table">
@@ -114,7 +105,7 @@
                   <th id="rankColumn" name="sortColumn" title="Coins ranked by market capitalization"
                       dataObjectAttribute="market_cap_rank"
                       onclick="sortTableRows(event, 'coinsNavTabArea')"># <span><i
-                        class="fas fa-sort-down"></i></span></th>
+                        class="fas fa-sort-up"></i></span></th>
                   <th id="nameColumn" name="sortColumn" title="Coin's Icon, Name (Id)"
                       dataObjectAttribute="name"
                       onclick="sortTableRows(event,'coinsNavTabArea')">Coins <span><i
@@ -189,6 +180,10 @@
 
               <!-- Paging controls (above the Exchanges table) -->
               <div class="btn-group mt-n5">
+
+                <button class="btn btn-light ml-4" onclick="loadFirstPageIntoTable('exchangesNavTabArea')">
+                  <i class="fas fa-sync-alt"></i></button>
+
                 <nav aria-label="Next and Previous page controls for the Exchange table">
                   <ul class="pagination ml-4">
                     <li class="page-item disabled" name="previousPageTableControl"
@@ -216,7 +211,7 @@
                   <th id="exchangeRankColumn" name="sortColumn" title="Exchanges ranked by Trust Score"
                       dataObjectAttribute="trust_score_rank"
                       onclick="sortTableRows(event,'exchangesNavTabArea')"># <span><i
-                        class="fas fa-sort-down"></i></span></th>
+                        class="fas fa-sort-up"></i></span></th>
                   <th id="exchangeNameColumn" name="sortColumn" title="Exchange's Icon, Name (Id)"
                       dataObjectAttribute="name"
                       onclick="sortTableRows(event,'exchangesNavTabArea')">Exchange <span><i
@@ -237,7 +232,7 @@
                         class="fas fa-sort"></i></span></th>
                   <th id="establishedYear" name="sortColumn" title="Exchange started operations"
                       dataObjectAttribute="year_established"
-                      onclick="sortTableRows(event,'exchangesNavTabArea')">Established<br>(year) <span><i
+                      onclick="sortTableRows(event,'exchangesNavTabArea')">Exchange<br>Established <span><i
                         class="fas fa-sort"></i></span></th>
                   <th id="exchangeTrustScoreColumn" name="sortColumn" title="Coingeko's trust score for the exchange"
                       dataObjectAttribute="trust_score"
@@ -283,10 +278,10 @@
     <!-- Page footer -->
     <div class="row" id="myPageFooter">
       <div class="col-sm-6" align="left">
-        <p>All coin and exchange data courtsey of coingeko (via their API).</p>
       </div>
       <div class="col-sm-6" align="left">
-        <p>Website developed by Mark Suscens (2020-21).</p>
+        <p>Developed by Mark Suscens (2020-21)</p>
+        <p>(Powered by CoinGecko API)</p>
       </div>
     </div>
 
@@ -306,10 +301,11 @@
     integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
     crossorigin="anonymous"></script>
 
-  <script src="helpers.js"></script>
+  <script src="helperFunctions.js"></script>
+  <script src="tableFunctions.js"></script>
   <script src="interfaceAPI.js"></script>
-  <script src="searchComponent.js"></script>
-  <script src="components.js"></script>
+  <script src="searchComponentClass.js"></script>
+  <script src="componentClasses.js"></script>
   <script src="indexLogic.js"></script>
 
 </footer>

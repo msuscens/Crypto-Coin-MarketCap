@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Crypto Coin Market">
+    <meta name="author" content="Mark Suscens">
+
+    <title>Crypto-Assets</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    
+    <!-- jQuery UI  -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/e0c2649351.js" crossorigin="anonymous"></script>
+
+    <!-- Include applications css styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="searchComponentStyles.css">
+
+</head>
+
+<body>
+    <div class="container bg-white">
+        <!-- Header section; with logo and search bar  -->
+        <br>
+        <div class="row">
+            <div class="col-sm-1" align="left">
+                <h1><a href="index.html"><i class="fas fa-chart-line"></i></a></h1>
+            </div>
+            <div class="col-sm-8" align="left">
+                <h1>Exchange Details</h1>
+            </div>
+
+            <div class="col-sm-3" align="right">
+                <div id="exchangeSearchComponent"></div>  <!-- Component placeholder  -->
+            </div>
+        </div>
+        <hr>
+
+        <div class="row">
+            <div class="col-sm-1" align="left">
+                <p title="Ranked on trust">Rank: <span id="trustRank">##</span></p>
+            </div>
+            <div class="col-sm-4" align="left">
+                <p><span id="exchangeIconNameId">EXCHANGE ICON, NAME (ID)</span></p>
+            </div>
+
+            <div class="col-sm-3" align="left">
+                <span id="tradeVolumnLine" title="Trade Volume during the last 24 hours">TRADE VOLUME</span>
+                <br>
+                <span id="trustScoreLine">TRUST SCORE</span>
+            </div>
+
+            
+            <div class="col-sm-2" align="left">
+                <span id="country">COUNTRY</span>
+                <br>
+                <span id="yearEstablished" title="Year the Exchange was established">YEAR EST.</span>
+            </div>
+
+            <div class="col-sm-2" align="left">
+                <span id="exchangeNature" title="Whether Exchange is 'Centralisd' or 'Decentralised'">NATURE</span>
+                <br>
+                <span id="tradingIncentive" title="Indicates that exchange offers a trading incentive">INCENTIVE?</span>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- Trading Volume Graph    -->
+        <div class="row">
+            <div class="col-sm-12">
+
+                <div id="exchangeTradingVolumeGraph">
+                    <canvas id="myChart" width="800" height="400"></canvas>
+                    <p>Start Date: <input type="text" id="myDatepicker"></input>
+                        <button id="myShowChartButton" class="btn btn-info">Update Graph</button>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Exchange Trading Pairs Tables-->
+        <div class="row">
+            <div class="col-sm-6" align="left">
+                <h5 id="exchangeTradingPairsTableHeading"
+                    title="Table of up to 100 trading pairs">Top Trading Pairs</h5>
+            </div>
+
+            <!-- Refresh data button -->
+            <div class="col-sm-6" align="right">
+              <div class="btn-group mt-n3">
+                <button class="btn btn-light ml-4" onclick="loadFirstPageIntoTable('exchangeTickersTable')"
+                        title="Fetch lastest data and reload table"><i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+        </div>
+
+        <!-- Table of Exchange Trading Pair Ticker details  -->
+        <div class="table-responsive">
+          <table class="table" id="exchangeTickersTable">
+            <thead class="sticky">
+              <tr>
+                <th id="importOrderColumn" name="sortColumn" title="Order of import"
+                    dataObjectAttribute="import_order"
+                    onclick="sortTableRows(event, 'exchangeTickersTable')"># <span><i
+                        class="fas fa-sort-up"></i></span></th>
+                <th id="baseCoinColumn" name="sortColumn" title="Trading pair's base coin identifier"
+                    dataObjectAttribute="base"
+                    onclick="sortTableRows(event, 'exchangeTickersTable')">Base <span><i
+                        class="fas fa-sort"></i></span></th>
+                <th id="targetCoinColumn" name="sortColumn" title="Trading pair's target coin identifier"
+                    dataObjectAttribute="target"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Target <span><i
+                        class="fas fa-sort"></i></span></th>
+                <th id="lastConversionRateColumn" name="sortColumn" title="Last conversion rate (from the 'base' to 'target' coin)"
+                    dataObjectAttribute="last"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Conversion Rate <span><i
+                        class="fas fa-sort"></i></span></th>
+                <th id="bidAskSpreadColumn" name="sortColumn" title="Bid-Ask spread percentage (as of last trade??)"
+                    dataObjectAttribute="bid_ask_spread_percentage"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Bid-Ask Spread <span><i
+                        class="fas fa-sort"></i></span></th>
+                <th id="tradeVolumeColumn" name="sortColumn" title="Trade volumne (over 24 hours???)"
+                    dataObjectAttribute="volume"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Volume <span><i
+                        class="fas fa-sort"></i></span></th>
+                <th id="lastTradeAtColumn" name="sortColumn" title="Last time that the base-target pair were traded"
+                    dataObjectAttribute="last_traded_at"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Last Trade <span><i
+                        class="fas fa-sort"></i></span></th>
+<!--
+               <th id="trustScoreColumn" name="sortColumn" title="Trust Score for the data (red, amber, green)"
+                    dataObjectAttribute="trust_score"
+                    onclick="sortTableRows(event,'exchangeTickersTable')">Trustworthy? <span><i
+                        class="fas fa-sort"></i></span></th>
+--> 
+              </tr>
+            </thead>
+
+            <tbody id="myExchangeTradingPairsTableBody"></tbody>
+
+          </table>
+        </div>
+    </div>
+</body>
+
+<footer>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+      integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+      crossorigin="anonymous"></script>
+
+
+    <script src="helperFunctions.js"></script>
+    <script src="tableFunctions.js"></script>
+    <script src="interfaceAPI.js"></script>
+    <script src="searchComponentClass.js"></script>
+    <script src="componentClasses.js"></script>
+    <script src="exchangeLogic.js"></script>
+
+</footer>
+
+</html>

@@ -1,4 +1,4 @@
-/* Javascript logic for coin page   */
+/* Javascript logic for coin details page   */
 
 // Switch on enhanced error checking by:
 // 1. Enabling Javascript 'strict mode'
@@ -22,7 +22,7 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
 
  try {
     // Obtain the coin data
-    getTheCoinPageData( coinCriteria )
+    getTheCoinDetailsPageData( coinCriteria )
     .then (
         (data) => {
             theCoinPageData = data
@@ -55,7 +55,7 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
                                               idSCForm: "coinSearchForm",
                                               idSCInput: "coinSearchInput",
                                               idSCList: "coinSearchList",
-                                              textSC: { input_title: "Type in a coin name or id",
+                                              textSC: { input_title: "Type in a coin (or token) name or id",
                                                          input_placeholder: "Search for a coin...",
                                                          suggestions_list_title: "Trending searches:",
                                                          searchPool_list_title: "Top matching coins:"

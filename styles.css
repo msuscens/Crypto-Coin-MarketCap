@@ -11,8 +11,11 @@ th[name="sortColumn"] {
   cursor: pointer;
 }
 
-/* Indicate that a coin (row) in the table can be selected */
+/* Indicate that a coin / exchange (row) in these table may be selected */
 tr[name="coinTableRow"] {
+  cursor: pointer;
+}
+tr[name="exchangeTableRow"] {
   cursor: pointer;
 }
 
