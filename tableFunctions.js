@@ -1,16 +1,24 @@
 //
-// TABLE SORTING EVENT HANDLERS
+// Generic Table sorting, paging and refresh event handlers.
+//
+// Allows a single event handler to be employed (one for each of these operations) 
+// across all the applications tables.  See README for details.
+//
+
+//
+// GENERIC TABLE SORTING - COLUMN SORT EVENT HANDLER
 //
 function sortTableRows(event, idHtmlElementWithTableData) {
   try {
+    console.log("In sortTableRows():")
     // Retreive table data and table's metadata
     const tableData = $(`#${idHtmlElementWithTableData}`).prop("tableData")
     const tableMetadata = $(`#${idHtmlElementWithTableData}`).prop("tableMetadata")
     if (!tableData || !tableMetadata) throw ("Asked to sort with unknown table data/metadata")
 
+    // Sort table data
     const currentSortOrder = $(event.currentTarget).prop("order")
     let newSortOrder
-
     if ((currentSortOrder == "descending") || (currentSortOrder == "ascending")) {
         // Previously sorted on this column, so simply reverse data order
         tableData.reverse()
@@ -19,7 +27,7 @@ function sortTableRows(event, idHtmlElementWithTableData) {
     else {  // Not previously sorted
         newSortOrder = "descending"  // default for sort
 
-        // Prepare a compare function (specific to sort column's data type, and the sort order)
+        // Make a compare function (specific to sort column's data type, and sort order)
         const dataAttribute = $(`#${event.currentTarget.id}`).attr("dataObjectAttribute")
         const functionBody = createCompareFunctionBody(tableData[0], dataAttribute, newSortOrder)
         const compareFunction = Function("a, b", functionBody)
@@ -27,67 +35,51 @@ function sortTableRows(event, idHtmlElementWithTableData) {
         // Sort the table data
         tableData.sort(compareFunction)
     }
-    // Store the sorted table data
+
+    // Store sorted table data
     $(`#${idHtmlElementWithTableData}`).prop("tableData", tableData)
 
     // Update the table (with sorted data)
-    setColumnHeadersSortOrder(event.currentTarget, newSortOrder)
-
     tableMetadata.populateTableFunction(tableData)
+    setColumnHeadersSortOrder(event.currentTarget.id, newSortOrder)
   }
   catch (errMsg) {
     throw("In sortTableRows(event, idHtmlElementWithTableData): " + errMsg)
   }
 }
-  
-function setColumnHeadersSortOrder(currentTargetColumn, newSortOrder) {
+ 
+function setColumnHeadersSortOrder(idSortedColumn, newSortOrder) {
+// Update table column header's sort icons and 'order' attribute
+// (according to columns newSortOrder: "ascending", "descending")
   try {
     const unsortedIcon = '<i class="fas fa-sort"></i>'
     const sortedAscendingIcon = '<i class="fas fa-sort-up"></i>'
     const sortedDescendingIcon = '<i class="fas fa-sort-down"></i>'
 
     // Set sort icons in table column headers
-    const sortOrderIcon = (newSortOrder === "ascending") ? sortedAscendingIcon : sortedDescendingIcon
-    $("[name='sortColumn']").find("span").html( unsortedIcon )
-    $("#" + currentTargetColumn.id).find("span").html( sortOrderIcon )
+    const sortOrderIcon = (newSortOrder === "ascending") ? sortedAscendingIcon :
+                        ((newSortOrder === "descending") ? sortedDescendingIcon :
+                                                          unsortedIcon)
+    $("#"+idSortedColumn).find("span").html( sortOrderIcon )
+    $("#"+idSortedColumn).siblings("th[name='sortColumn']").find("span").html(unsortedIcon)
 
     // Set 'order' property on table column headings
-    $(currentTargetColumn).prop("order", newSortOrder)
-    $(currentTargetColumn).siblings().removeProp("order")
-    
+    if ((newSortOrder === "ascending") || (newSortOrder === "descending")) {
+      $("#"+idSortedColumn).prop("order", newSortOrder)
+    }
+    else {
+      $("#"+idSortedColumn).removeProp("order")
+    }
+    $("#"+idSortedColumn).siblings("th[name='sortColumn']").removeProp("order")
   }
   catch (errMsg) {
-    throw("In setColumnHeadersSortOrder(currentTargetColumn, newSortOrder): " + errMsg)
+    throw("In setColumnHeadersSortOrder(idSortedColumn, newSortOrder): " + errMsg)
   }
 }
 
-/*  This function refactored above- so that it takes currentTarget rather than an event
-    Refactored as part of anlysis into reusing this function to reset the comlmn sort icons,
-    with idea of calling this function with tables first <th> element
-    KEEP BOTH VERSIONS FOR NOW UNTIL THIS ISSUE IS RESOLVED
-function setColumnHeadersSortOrder(event, newSortOrder) {
-  try {
-    const unsortedIcon = '<i class="fas fa-sort"></i>'
-    const sortedAscendingIcon = '<i class="fas fa-sort-up"></i>'
-    const sortedDescendingIcon = '<i class="fas fa-sort-down"></i>'
-
-    // Set sort icons in table column headers
-    const sortOrderIcon = (newSortOrder === "ascending") ? sortedAscendingIcon : sortedDescendingIcon
-    $("[name='sortColumn']").find("span").html( unsortedIcon )
-    $("#" + event.currentTarget.id).find("span").html( sortOrderIcon )
-
-    // Set 'order' property on table column headings
-    $(event.currentTarget).prop("order", newSortOrder)
-    $(event.currentTarget).siblings().removeProp("order")
-  }
-  catch (errMsg) {
-    throw("In setColumnHeadersSortOrder(event, newSortOrder): " + errMsg)
-  }
-}
-*/
 
 //  
-// TABLE PAGING - EVENT HANDLERS
+// GENERIC TABLE PAGING - NEXT ANDF PREVIOUS EVENT HANDLERS
 //
 function loadNextPageIntoTable(idHtmlElementWithTableData) {
   try {
@@ -108,17 +100,9 @@ function loadNextPageIntoTable(idHtmlElementWithTableData) {
     // Display next page of data in table
     tableMetadata.loadTableDataFunction()
     
-    // Reset the column sort icons
-    // *** TODO  ***
-    // **** Issue:  How to call from here: setColumnHeadersSortOrder(currentTargetColumn, "ascending")
-    // ****         where currentTargetColumn is the first column <th> target
-    // *** Posibilities to solve:
-    // **** 1. Pass in event to this EH function and then  naviagte DOM to table's first column <th>
-    // ****    But how and is this a good method? Needs to be generic/reusable on all tables!!
-    // **** 2. Save the table column headers id into the table metaData (that this function retreives)
-    // ****    But this adds size/complexity to the metadata that is needed for each table.
-    // **** 3. Some other solution that is elegant, generic ! ???  
-
+    // Reset the column sort order and icons 
+    const idFirstSortColumn = $(`#${idHtmlElementWithTableData} th[name='sortColumn']:first`)[0].id
+    setColumnHeadersSortOrder(idFirstSortColumn, "unsorted")
   }
   catch (errMsg) {
     throw("In loadNextPageIntoTable(idHtmlElementWithTableData): " + errMsg)
@@ -144,15 +128,18 @@ function loadPreviousPageIntoTable(idHtmlElementWithTableData) {
     // Display previous page of coins in table
     tableMetadata.loadTableDataFunction()
 
-    // Reset the column sort icons
-    // *** TODO  ***
-
+    // Reset the column sort order and icons 
+    const idFirstSortColumn = $(`#${idHtmlElementWithTableData} th[name='sortColumn']:first`)[0].id
+    setColumnHeadersSortOrder(idFirstSortColumn, "unsorted")
   }
   catch (errMsg) {
     throw("In loadPreviousPageIntoTable(idHtmlElementWithTableData): " + errMsg)
   }
 }
 
+//  
+// GENERIC TABLE DATA RELOAD / REFRESH - EVENT HANDLER
+//
 function loadFirstPageIntoTable(idHtmlElementWithTableData) {
   try {
     // Reset page number to first page
@@ -166,13 +153,11 @@ function loadFirstPageIntoTable(idHtmlElementWithTableData) {
 
     tableMetadata.loadTableDataFunction()
 
-    // Reset the column sort icons
-    // *** TODO  ***
-
+    // Reset the column sort order and icons 
+    const idFirstSortColumn = $(`#${idHtmlElementWithTableData} th[name='sortColumn']:first`)[0].id
+    setColumnHeadersSortOrder(idFirstSortColumn, "unsorted")
   }
   catch (errMsg) {
     throw("In loadFirstPageIntoTable(idHtmlElementWithTableData): " + errMsg)
   }
 }
-
-

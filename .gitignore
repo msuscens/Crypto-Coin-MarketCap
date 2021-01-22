@@ -1,3 +1,5 @@
 .DS_Store
 CoinCap.code-workspace
 .vscode
+copyExchangeLogic.js
+copyIndexLogic.js

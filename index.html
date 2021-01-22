@@ -63,7 +63,7 @@
       </ul>
 
       <!-- Tab Content -->
-      <div class="tab-content" id="myTabContent">
+      <div class="tab-content"> 
 
         <!-- Coins tab content-->
         <div class="tab-pane fade show active" id="coinsNavTabArea" role="tabpanel" aria-labelledby="coins-tab">
@@ -101,11 +101,11 @@
           <div class="table-responsive">
             <table class="table">
               <thead class="sticky">
-                <tr>
+                <tr>  
                   <th id="rankColumn" name="sortColumn" title="Coins ranked by market capitalization"
                       dataObjectAttribute="market_cap_rank"
                       onclick="sortTableRows(event, 'coinsNavTabArea')"># <span><i
-                        class="fas fa-sort-up"></i></span></th>
+                        class="fas fa-sort"></i></span></th>
                   <th id="nameColumn" name="sortColumn" title="Coin's Icon, Name (Id)"
                       dataObjectAttribute="name"
                       onclick="sortTableRows(event,'coinsNavTabArea')">Coins <span><i
@@ -205,13 +205,13 @@
 
           <!-- Table of Exchanges  -->
           <div class="table-responsive">
-            <table class="table" id="exchangesTable">
+            <table class="table" id="tableOfExchanges">
               <thead class="sticky">
                 <tr>
                   <th id="exchangeRankColumn" name="sortColumn" title="Exchanges ranked by Trust Score"
                       dataObjectAttribute="trust_score_rank"
                       onclick="sortTableRows(event,'exchangesNavTabArea')"># <span><i
-                        class="fas fa-sort-up"></i></span></th>
+                        class="fas fa-sort"></i></span></th>
                   <th id="exchangeNameColumn" name="sortColumn" title="Exchange's Icon, Name (Id)"
                       dataObjectAttribute="name"
                       onclick="sortTableRows(event,'exchangesNavTabArea')">Exchange <span><i
@@ -220,12 +220,6 @@
                       dataObjectAttribute="trade_volume_24h_btc"
                       onclick="sortTableRows(event,'exchangesNavTabArea')">Trade Volume<br>(in BTC)<span><i
                         class="fas fa-sort"></i></span></th>
-      <!--            
-                  <th id="tradeVolumeNormalizedColumn" name="sortColumn" title="Exchange's trade over 24-hour period"
-                      dataObjectAttribute="trade_volume_24h_btc_normalized"
-                      onclick="sortTableRows(event,'exchangesNavTabArea')">Trade Volume Normalised (in BTC)<span><i
-                        class="fas fa-sort"></i></span></th>
-      -->
                   <th id="exchangeCountryColumn" name="sortColumn" title="Where exchange is registered"
                       dataObjectAttribute="country"
                       onclick="sortTableRows(event,'exchangesNavTabArea')">Country <span><i
