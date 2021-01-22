@@ -6,6 +6,9 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
+// Where to store and retrive the table data and graph data
+const idElementStoringTradingPairsTableData = "exchangeTickersTable" 
+const idElementStoringTradingVolumeGraphData = "exchangeTradingVolumeGraph" 
 
 // Initial page parameters 
 const exchangeId = getParamFromUrl( window.location.href, "?exchangeid=")
@@ -32,13 +35,9 @@ const metadataForPage = {
 }
 
 // Save meta data (in html elements as properties)
- $("#exchangeTickersTable").prop("tableMetadata", metadataForPage.table)
- $("#exchangeTradingVolumeGraph").prop("graphMetadata", metadataForPage.graph)
+ $("#"+idElementStoringTradingPairsTableData).prop("tableMetadata",metadataForPage.table)
+ $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata",metadataForPage.graph)
 
-
-// Initialise the currency formatter functions (for 0 & 2 decimail places)
-//let currency2DP = newCurrencyFormater(defaultCurrency, 2)
-//let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
 try {
     // Fetch the live data
@@ -46,8 +45,8 @@ try {
     .then (
         (data) => {
             // Save page's graph and table data (into the html table body)
-            $("#exchangeTradingVolumeGraph").prop("graphData", data.graph)
-            $("#exchangeTickersTable").prop("tableData", data.tickers)
+            $("#"+idElementStoringTradingVolumeGraphData).prop("graphData",data.graph)
+            $("#"+idElementStoringTradingPairsTableData).prop("tableData",data.tickers)
 
             // Add data to the webpage
             displayExchangeHeader(data)
@@ -158,13 +157,13 @@ function reloadTradingPairsTable() {
 // Event Handler to "Refresh" the Trading Pair's table
   try {
     // Retreive the table's metadata
-    const tableMetadata = $("#exchangeTickersTable").prop("tableMetadata")
+    const tableMetadata = $("#"+idElementStoringTradingPairsTableData).prop("tableMetadata")
 
     // Obtain the coin data
     getExchangeData(tableMetadata)
     .then (
       (data) => {
-        $("#exchangeTickersTable").prop("tableData", data.tickers)
+        $("#"+idElementStoringTradingPairsTableData).prop("tableData", data.tickers)
 
         // Display the tickers data in the table
         populateTradingPairsTable(data.tickers)

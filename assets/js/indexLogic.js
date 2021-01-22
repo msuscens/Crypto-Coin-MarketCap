@@ -6,10 +6,13 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-// Global - data for the page
-const fallbackCurrency = "usd"
+
+// Where to store and retrive the table data and table meta data
+const idElementStoringCoinsTableData = "coinsNavTabArea"
+const idElementStoringExchangesTableData = "exchangesNavTabArea"
 
 // Use cookie for default currency
+const fallbackCurrency = "usd"
 let defaultCurrency = null
 if ( checkCookie(currencyCookie) == true ) defaultCurrency = getCookie(currencyCookie)
 else defaultCurrency = fallbackCurrency
@@ -32,8 +35,8 @@ const metadataForTable = {
   }
 }
 // Save tables meta data (in html nav tab that cointains each table)
-$("#coinsNavTabArea").prop("tableMetadata", metadataForTable.coins)
-$("#exchangesNavTabArea").prop("tableMetadata", metadataForTable.exchanges)
+$("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForTable.coins)
+$("#"+idElementStoringExchangesTableData).prop("tableMetadata", metadataForTable.exchanges)
 
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
@@ -46,8 +49,8 @@ try {
     .then (
         (data) => {
             // Save coins and exchanges data (into the html nav tab that contains each table)
-            $("#coinsNavTabArea").prop("tableData", data.coins)
-            $("#exchangesNavTabArea").prop("tableData", data.exchanges)
+            $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
+            $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
 
             // Display Coin table (in coin nav tab)
             populateCoinsTable(data.coins)
@@ -168,11 +171,11 @@ function reloadCoinsTable() {
 // Event Handler to "Refresh" table data
   try {
     // Obtain the coin data
-    const tableMetadata = $("#coinsNavTabArea").prop("tableMetadata")
+    const tableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
     getCoinTableData(tableMetadata)
     .then (
       (data) => {
-        $("#coinsNavTabArea").prop("tableData", data.coins)
+        $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
 
         // Display the coin data on the webpage
         populateCoinsTable(data.coins)
@@ -187,16 +190,11 @@ function reloadCoinsTable() {
 function displayCoinPage(event){
 // Event Handler for when user clicks a row of the coin table
   try {
-//    const coinID = event.target.parentNode.attributes.coinid.nodeValue
     const coinID = event.currentTarget.attributes.coinid.nodeValue
 
-// *** TODO: Below, better to get metadataForTable from html prop (rather than using global)?
-// ie.
-// Retreive the table's metadata
-//  const tableMetadata = $("#coinsNavTabArea").prop("tableMetadata")
-// const currencyID = tableMetadata.currencyId.toLowerCase()
-
-    const currencyID = metadataForTable.coins.currencyId.toLowerCase()
+    // Retreive the currency id 
+    const tableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
+    const currencyID = tableMetadata.currencyId.toLowerCase()
 
     window.location.href = `coin.html?coinid=${coinID}&currencyid=${currencyID}`
   }
@@ -214,19 +212,16 @@ function changeCoinTableCurrency(currencyId){
     currency2DP = newCurrencyFormater(currencyId, 2)
     currency0DP = newCurrencyFormater(currencyId, 0)
     
-    // Obtain the coin data in new currency
+    // Set the the new currency id (in coin table's metadata)
+    const coinTableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
+    coinTableMetadata.currencyId = currencyId
+    $("#"+idElementStoringCoinsTableData).prop("tableMetadata", coinTableMetadata)
 
-// *** TODO: Better to set metadataForTable in html prop (rather than using global)?
-// ie.
-// Set the table's metadata
-// $("#coinsNavTabArea").prop("tableMetadata", currencyId)
-
-    metadataForTable.coins.currencyId = currencyId
-
+    // Obtain the coin data
     getCoinTableData(metadataForTable.coins)
     .then (
       (data) => {
-        $("#coinsNavTabArea").prop("tableData", data.coins)
+        $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
 
         // Display the coin data on the webpage
         populateCoinsTable( data.coins )
@@ -284,13 +279,13 @@ function reloadExchangesTable() {
 // Event Handler to "Refresh" the Exchanges table
   try {
   // Retreive the table's metadata
-  const tableMetadata = $("#exchangesNavTabArea").prop("tableMetadata")
+  const tableMetadata = $("#"+idElementStoringExchangesTableData).prop("tableMetadata")
 
   // Obtain the exchange data
   getExchangeTableData(tableMetadata)
   .then (
     (data) => {
-      $("#exchangesNavTabArea").prop("tableData", data.exchanges)
+      $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
 
       // Display Exchanges table (in exchanges nav tab)
       populateExchangesTable(data.exchanges)    
@@ -304,8 +299,8 @@ function reloadExchangesTable() {
 function displayExchangePage(event) {
 // Event Handler to invoke the exchange details page (e.g when user clicks a row in the exhanges table)
   try {
-//    const exchangeID = event.target.parentNode.attributes.exchangeid.nodeValue
     const exchangeID = event.currentTarget.attributes.exchangeid.nodeValue
+//    const exchangeID = event.target.parentNode.attributes.exchangeid.nodeValue
 
     window.location.href = `exchange.html?exchangeid=${exchangeID}`
   }
