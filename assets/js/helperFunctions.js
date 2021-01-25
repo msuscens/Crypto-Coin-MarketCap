@@ -137,9 +137,9 @@ function getParamFromUrl(url, paramId) {
 function getCurrencySymbol(currencyId){
   try {
     let num = 0
-    const symbol = num.toLocaleString("en",
-                            {style: "currency",
-                            currency: currencyId.toUpperCase()}).replace(/\d+([,.]\d+)?/g, "")
+    const symbol = (currencyId.toUpperCase() === "BTC") ? '\u20BF' :
+                      num.toLocaleString("en", {style: "currency",
+                        currency: currencyId.toUpperCase()}).replace(/\d+([,.]\d+)?/g, "")
     return symbol
   }
   catch(errMsg){

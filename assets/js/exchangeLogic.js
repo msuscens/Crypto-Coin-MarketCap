@@ -14,7 +14,6 @@ const idElementStoringTradingVolumeGraphData = "exchangeTradingVolumeGraph"
 const exchangeId = getParamFromUrl( window.location.href, "?exchangeid=")
 const graphStartDaysAgo = 365       // Default for inital page load
 
-// Collate metadata (on page's trade volume graph and trading pairs table)
 const metadataForPage = {
     graph: {
         exchangeId:  exchangeId,
@@ -33,23 +32,27 @@ const metadataForPage = {
           currentPageNumber: 1
     }
 }
-
 // Save meta data (in html elements as properties)
- $("#"+idElementStoringTradingPairsTableData).prop("tableMetadata",metadataForPage.table)
- $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata",metadataForPage.graph)
-
+$("#"+idElementStoringTradingPairsTableData).prop("tableMetadata",metadataForPage.table)
+$("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata",metadataForPage.graph)
 
 try {
-    // Fetch the live data
-    getTheExchangeDetailsPageData(metadataForPage)
+    // Fetch the page data
+    getContentForExchangeDetailsPage(metadataForPage)
     .then (
         (data) => {
-            // Save page's graph and table data (into the html table body)
+            // Set graph's additional characteristics
+            data.graph.style = getGraphStyle()
+            data.graph.title = `Total Trading Volume across all trading pairs (in BTC)`
+            data.graph.currency_symbol =  getCurrencySymbol("BTC")
+
+            // Save page's graph and table content
             $("#"+idElementStoringTradingVolumeGraphData).prop("graphData",data.graph)
             $("#"+idElementStoringTradingPairsTableData).prop("tableData",data.tickers)
 
-            // Add data to the webpage
+            // Add content to the webpage
             displayExchangeHeader(data)
+            displayGraph(data.graph)
             populateTradingPairsTable(data.tickers)
 
             // Put the exchange search component onto the page
@@ -73,6 +76,23 @@ try {
 } catch (errMsg) {
     console.log("ExchangesLogic.js Main code: Something went wrong: " + errMsg)
 }
+
+
+// Initialise date picker (for graph start date)
+$(function () {
+  try {
+    $("#myDatepicker").datepicker({
+        dateFormat: "yy-mm-dd", defaultDate: `-${graphStartDaysAgo}d`,
+        maxDate: "-5d", minDate: new Date(2010, 1 - 1, 1),
+        yearRange: "2010:c"
+    })
+    $("#myDatepicker").datepicker("setDate", `-${graphStartDaysAgo}d`)
+  }
+  catch (errMsg) {
+    throw("In Initialise date picker: " + errMsg)
+  }
+})
+
 
 function displayExchangeHeader(exchange){
     try {
@@ -106,6 +126,87 @@ function displayExchangeHeader(exchange){
     }
 }
 
+
+//
+// TRADING VOLUME GRAPH RELATED FUNCTIONS
+//
+
+$("#myShowChartButton").click(async function () {
+// Event handler for clicking 'Update' button:  Display trading volume graph (from the start date)
+  try {
+      // Get new start date (saving into the graph metadata)
+      const startDate = $("#myDatepicker").datepicker("getDate")
+      const daysAgo = Math.ceil( getDaysAgo(startDate) )
+      const graphMetadata =  $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata")
+      graphMetadata.graphStartDaysAgo = daysAgo
+      $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata", graphMetadata)
+      
+      // Update the trading volume coordinates (required for the graph)
+      const newTradeHistory = await getTradingVolumeHistory(graphMetadata)
+      const graph = $("#"+idElementStoringTradingVolumeGraphData).prop("graphData")
+      graph.coordinates = newTradeHistory.graph.coordinates
+      $("#"+idElementStoringTradingVolumeGraphData).prop("graphData", graph)
+
+      // Display the graph
+      displayGraph(graph)
+  }
+  catch (errMsg) {
+      throw("In event handler: $('#myShowChartButton').click(async function ( ... ): " + errMsg)
+  }
+})
+  
+
+function getGraphStyle() {
+  try {
+    return  { type: "line",
+              fill: false,
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1
+            }
+  }
+  catch (errMsg) {
+    throw("In getGraphStyle(): " + errMsg)
+  } 
+}
+  
+
+function displayGraph(graph) {
+  try {
+    // Create and display the coin price chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+            type: graph.style.type,
+            data: {
+                labels: graph.coordinates.xs,
+                datasets: [{
+                    label: graph.title,
+                    data: graph.coordinates.ys,
+                    fill: graph.style.fill,
+                    backgroundColor: graph.style.backgroundColor,
+                    borderColor: graph.style.borderColor,
+                    borderWidth: graph.style.borderWidth
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            callback: function (value, index, values) {
+                                return graph.currency_symbol + value
+                            }
+                        }
+                    }]
+                }
+            }
+        });
+  }
+  catch (errMsg) {
+    throw("In displayGraph(graph): " + errMsg)
+  }
+}
+  
+
 function populateTradingPairsTable(tickers) {
 // Fill the table with the exchange's trading-pairs data
   try {
@@ -124,6 +225,7 @@ function populateTradingPairsTable(tickers) {
       throw("In populateTradingPairsTable(tickers): " + errMsg)
   }
 }
+
 
 function constructTradingPairTableRowHtml(ticker) {
 // Create and return the HTML string for a row of the Trading-pairs table
@@ -152,6 +254,7 @@ function constructTradingPairTableRowHtml(ticker) {
     throw("In constructTradingPairTableRowHtml(ticker): " + errMsg)
   }
 }
+
 
 function reloadTradingPairsTable() {
 // Event Handler to "Refresh" the Trading Pair's table

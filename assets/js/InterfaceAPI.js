@@ -74,11 +74,11 @@ const API_ENDPOINTS = {
 //
 async function getTheIndexPageData(criteria) {
   try {
-    // Get the external data for the Index page
+    // Get the external (api) data 
     const indexPage = await getApiDataForIndexPage(criteria)
 
-    // Add supplementary data required by index page here ...
-    // (None required at present)
+    // Add supplementary data
+    // ... None required at present
 
     return indexPage
   }
@@ -286,9 +286,10 @@ async function getExchangeTableData(criteria) {
 //
 async function getTheCoinDetailsPageData(criteria) {
   try {
+    // Get the external (api) data 
     const coinDetailsPage = await getApiDataForCoinDetailsPage(criteria)
     
-    // Add supplementary data required by coin details page
+    // Add supplementary data
     coinDetailsPage.currency_id = criteria.currencyId.toLowerCase()
 
     return coinDetailsPage
@@ -299,6 +300,7 @@ async function getTheCoinDetailsPageData(criteria) {
 }
 
 async function getApiDataForCoinDetailsPage(criteria) {
+// Fetch all data via coingeko api calls, collating into form required by 'coin details' page
   try {
     // Get API URLs (for calls to CoinGeko)
     const urlCoinApi = API_ENDPOINTS.getCoinUrl( criteria )
@@ -449,22 +451,24 @@ async function getCoinGraphData(coinCriteria) {
 //
 // FUNCTIONS FOR OBTAINING AND PREPARING DATA FOR THE EXCHANGE DETAILS PAGE
 //
-async function getTheExchangeDetailsPageData(criteria) {
+async function getContentForExchangeDetailsPage(criteria) {
   try {
-    // Get the external data for the Index page
+    // Get the external (api) data 
     const exchangeDetailsPage = await getApiDataForExchangeDetailsPage(criteria)
 
-    // Add supplementary data required by exchange details page 
+    // Add supplementary data  
     exchangeDetailsPage.id = criteria.table.exchangeId
+    exchangeDetailsPage.graph.currency_id = "BTC"  // Trading voulume data in Bitcoin (btc)
 
     return exchangeDetailsPage
   }
   catch (errMsg){
-    throw ("Error from InterfaceAPI.js getTheExchangeDetailsPageData(criteria): " + errMsg)
+    throw ("Error from InterfaceAPI.js getContentForExchangeDetailsPage(criteria): " + errMsg)
   }
 }
 
 async function getApiDataForExchangeDetailsPage(criteria) {
+// Fetch all data via coingeko api calls, collating it into form required by 'exchange details' page
   try {
     // Get API URLs (for calls to CoinGeko)
     const urlExchangeVolumeAndTickersApi = API_ENDPOINTS.getExchangeVolumeAndTickersUrl(criteria.table)
@@ -504,7 +508,7 @@ function collateExchangeDetailsPage(rawCoinGekoData){
   try {
     // Prepare and collate data required by page
     const exchangeDetailsPageData = { ... prepareExchangeInformation(rawCoinGekoData[0]),
-                                      ... prepareGraphData(rawCoinGekoData[1]),
+                                      ... prepareGraphCoordinates(rawCoinGekoData[1]),
                                       ... prepareListOfAllExchanges(rawCoinGekoData[2]),
                                       ... prepareListExchangesWithHighestTrustScore(rawCoinGekoData[3])
                                     }
@@ -557,46 +561,9 @@ function prepareTickers(tickerCoingekoData) {
 
       if (!tickers[i].base) tickers[i].base = "???"
       if (!tickers[i].target) tickers[i].target = "???"
-
-      // Set fallbacks for market object attributes:
-      //  "market": {
-      //    "name": "Coinbase Pro",
-      //    "identifier": "gdax",
-      //    "has_trading_incentive": false
-      //  },
-
       if (!Number.isFinite(tickers[i].last)) tickers[i].last = NaN
       if (!Number.isFinite(tickers[i].volume)) tickers[i].volume = NaN
-
-      // Set fallbacks for converted_last object attributes:
-      //  "converted_last": {
-      //    "btc": 0.99962016,
-      //    "eth": 28.908702,
-      //    "usd": 35383
-      //  },
-
-      // Set fallbacks for converted_volume object attributes:
-      //  "converted_volume": {
-      //    "btc": 19827,
-      //    "eth": 573394,
-      //    "usd": 701816809
-      // },
-
-      // Set fallbacks for following attributes:
-      /*  
-      "trust_score": "green",
-      */
-     if (!Number.isFinite(tickers[i].bid_ask_spread_percentage)) tickers[i].bid_ask_spread_percentage = NaN
-      /*
-      "timestamp": "2021-01-17T13:26:55+00:00",
-      "last_traded_at": "2021-01-17T13:26:55+00:00",
-      "last_fetch_at": "2021-01-17T13:26:55+00:00",
-      "is_anomaly": false,
-      "is_stale": false,
-      "trade_url": "https://pro.coinbase.com/trade/BTC-USD",
-      "token_info_url": null,
-      "coin_id": "bitcoin"
-      */
+      if (!Number.isFinite(tickers[i].bid_ask_spread_percentage)) tickers[i].bid_ask_spread_percentage = NaN
     }
     return tickers
   }
@@ -605,37 +572,57 @@ function prepareTickers(tickerCoingekoData) {
   }
 }
 
-// FUNCTIONS FOR THE TRADING VOLUME GRAPH DATA (ON EXCAHNGE DETAILS PAGE)
-//
-// *** TODO: Refactor function below (and coin details page use of prepareCoinPriceGraph())
-// *** so that it can be used for both Coin price graph and Exchange Volume graph
-function prepareGraphData(rawChartCoingekoData) {
+async function getExchangeData(criteria) {
   try {
-    const graphData = {
-      graph: {
-          xs: [],
-          ys: [],
-          chart_data_unprocessed : []
-      }
-    }
-    graphData.graph.chart_data_unprocessed = rawChartCoingekoData
+    const url = API_ENDPOINTS.getExchangeVolumeAndTickersUrl(criteria)
+    const data = await fetchApiData(url)
+    let exchange = prepareExchangeInformation(data)
 
-    // Obtain x & y data points (of dates & prices)
-    const rawChartTable = [rawChartCoingekoData]
+    // Add supplementry data required by page
+    exchange.id = criteria.exchangeId
 
-    rawChartTable[0].forEach(row => {
-        const date = new Date(row[0])
-        graphData.graph.xs.push(date.toLocaleDateString())
-        const value = parseFloat(row[1])
-        graphData.graph.ys.push(value)
-    })
-
-    return graphData
+    return exchange
   }
   catch (errMsg){
-    throw ("In prepareGraphData(rawChartCoingekoData): " + errMsg) 
+    throw ("In getExchangeData(criteria): " + errMsg)
   }
 }
+
+// FUNCTIONS FOR THE TRADING VOLUME GRAPH DATA (ON EXCAHNGE DETAILS PAGE)
+//
+function prepareGraphCoordinates(rawChartCoingekoData) {
+  try {
+    const graph = { coordinates: {
+                      xs: [],
+                      ys: []
+                    }
+                  }
+    // Determine x & y points for graph
+    rawChartCoingekoData.forEach(row => {
+        const date = new Date(row[0])
+        graph.coordinates.xs.push(date.toLocaleDateString())
+        const value = parseFloat(row[1])
+        graph.coordinates.ys.push(value)
+    })
+    return {graph: graph}
+  }
+  catch (errMsg){
+    throw ("In prepareGraphCoordinates(rawChartCoingekoData): " + errMsg) 
+  }
+}
+
+
+async function getTradingVolumeHistory(criteria) {
+  try {
+    const url = API_ENDPOINTS.getExchangeVolumeChartUrl(criteria)
+    const graph = prepareGraphCoordinates( await fetchApiData(url) )
+    return graph
+  }
+  catch (errMsg){
+    throw ("In getTradingVolumeHistory(criteria): " + errMsg)
+  }
+}
+
 
 function prepareListOfAllExchanges(listOfAllExchangesCoingekoData) {
   try {
@@ -679,18 +666,3 @@ function prepareListExchangesWithHighestTrustScore(highestTrustScoringExchangesC
 }
 
 
-async function getExchangeData(criteria) {
-  try {
-    const url = API_ENDPOINTS.getExchangeVolumeAndTickersUrl(criteria)
-    const data = await fetchApiData(url)
-    let exchange = prepareExchangeInformation(data)
-
-    // Add supplementry data required by page
-    exchange.id = criteria.exchangeId
-
-    return exchange
-  }
-  catch (errMsg){
-    throw ("In getExchangeData(criteria): " + errMsg)
-  }
-}
