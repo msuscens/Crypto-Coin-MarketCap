@@ -41,6 +41,7 @@
         <div class="col-sm-3" align="right">
             <br>
             <div id="coinSearchComponent"></div>  <!-- Component placeholder  -->
+            <div id="exchangeSearchComponent"></div>  <!-- Component placeholder  -->
         </div>
     </div>
     <hr>
@@ -51,12 +52,12 @@
       <!-- Nav tabs across page -->
       <ul class="nav nav-tabs" id="myTab" role="tablist">
         <!-- Coins tab position --> 
-        <li class="nav-item">
+        <li class="nav-item" onclick="toggleSearchComponent('coinSearchComponent', 'exchangeSearchComponent')">
           <a class="nav-link active" id="coins-tab" data-toggle="tab" href="#coinsNavTabArea" role="tab"
             aria-controls="coinsNavTabArea" aria-selected="true">Coins & Tokens</a>
         </li>
         <!-- Exchanges tab position -->
-        <li class="nav-item">
+        <li class="nav-item" onclick="toggleSearchComponent('exchangeSearchComponent', 'coinSearchComponent')">
           <a class="nav-link" id="exchanges-tab" data-toggle="tab" href="#exchangesNavTabArea" role="tab"
             aria-controls="exchangesNavTabArea" aria-selected="false">Exchanges</a>
         </li>

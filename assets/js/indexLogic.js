@@ -19,7 +19,7 @@ else defaultCurrency = fallbackCurrency
 setCookie(currencyCookie, defaultCurrency, cookieDurationInSeconds) // set or refresh cookie
 
 // Metadata on the Coins and Exchanges tables 
-const metadataForTable = {
+const metadataForPage = {
   coins: {
     currencyId: defaultCurrency.toLowerCase(),
     rowsPerPage: 100,
@@ -32,11 +32,15 @@ const metadataForTable = {
     currentPageNumber: 1,
     loadTableDataFunction: reloadExchangesTable,
     populateTableFunction: populateExchangesTable
+  },
+  searchSuggestions: {
+    rowsPerPage: 8,    
+    currentPageNumber: 1
   }
 }
 // Save tables meta data (in html nav tab that cointains each table)
-$("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForTable.coins)
-$("#"+idElementStoringExchangesTableData).prop("tableMetadata", metadataForTable.exchanges)
+$("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForPage.coins)
+$("#"+idElementStoringExchangesTableData).prop("tableMetadata", metadataForPage.exchanges)
 
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
@@ -45,7 +49,7 @@ let currency0DP = newCurrencyFormater(defaultCurrency, 0)
 
 try {
     // Fetch the live data
-    getTheIndexPageData(metadataForTable)
+    getContentForIndexPage(metadataForPage)
     .then (
         (data) => {
             // Save coins and exchanges data (into the html nav tab that contains each table)
@@ -68,7 +72,7 @@ try {
             $("#currencySelectorComponent").prop("currencySelectorObject", currencySelector)
 
             // Add a coin search component onto the page
-            const componentCriteria = { idSC: "coinSearchComponent",
+            const criteriaCoinSearch = { idSC: "coinSearchComponent",
                                         idSCForm: "coinSearchForm",
                                         idSCInput: "coinSearchInput",
                                         idSCList: "coinSearchList",
@@ -81,7 +85,24 @@ try {
                                         suggestions: data.trending_coin_searches,
                                         maxItemsInSearchList : 8                                           
                                        }
-            const coinSearch = new CoinSearchComponent(componentCriteria)
+            new CoinSearchComponent(criteriaCoinSearch)
+
+            // Add a hidden exchange search component onto the page
+            $("#exchangeSearchComponent").hide()
+            const criteriaExchangeSearch = { idSC: "exchangeSearchComponent",
+                                        idSCForm: "exchangeSearchForm",
+                                        idSCInput: "exchangeSearchInput",
+                                        idSCList: "exchangeSearchList",
+                                        textSC: { input_title: "Type in an Exchange name or id",
+                                                  input_placeholder: "Search for an exchange...",
+                                                  suggestions_list_title: "Top Exchanges [trust score]:",
+                                                  searchPool_list_title: "Exchange matches:"
+                                                },
+                                        searchPool: data.all_the_exchanges,
+                                        suggestions: data.exchanges_with_highest_trustscore,
+                                        maxItemsInSearchList : metadataForPage.searchSuggestions.rowsPerPage                                           
+            }
+            new ExchangeSearchComponent(criteriaExchangeSearch)
 
             // Display Exchanges table (in exchanges nav tab)
             populateExchangesTable(data.exchanges)
@@ -300,11 +321,21 @@ function displayExchangePage(event) {
 // Event Handler to invoke the exchange details page (e.g when user clicks a row in the exhanges table)
   try {
     const exchangeID = event.currentTarget.attributes.exchangeid.nodeValue
-//    const exchangeID = event.target.parentNode.attributes.exchangeid.nodeValue
 
     window.location.href = `exchange.html?exchangeid=${exchangeID}`
   }
   catch (errMsg) {
     throw("In EH displayExchangePage(event): " + errMsg)
+  }
+}
+
+function toggleSearchComponent(showDivId, hideDivId)  {
+// Event Handler to show either the coin search component or exchange search component and hide the other
+  try {
+    $("#"+showDivId).show()
+    $("#"+hideDivId).hide()
+  }
+  catch (errMsg) {
+    throw("In EH showSearchComponent(divId): " + errMsg)
   }
 }

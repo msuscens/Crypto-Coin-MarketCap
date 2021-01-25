@@ -72,7 +72,7 @@ const API_ENDPOINTS = {
 //
 // FUNCTIONS FOR OBTAINING AND PREPARING DATA FOR THE INDEX (HOME) PAGE
 //
-async function getTheIndexPageData(criteria) {
+async function getContentForIndexPage(criteria) {
   try {
     // Get the external (api) data 
     const indexPage = await getApiDataForIndexPage(criteria)
@@ -83,7 +83,7 @@ async function getTheIndexPageData(criteria) {
     return indexPage
   }
   catch (errMsg){
-    throw ("Error from InterfaceAPI.js getTheIndexPageData(criteria): " + errMsg)
+    throw ("Error from InterfaceAPI.js getContentForIndexPage(criteria): " + errMsg)
   }
 }
 
@@ -94,16 +94,18 @@ async function getApiDataForIndexPage(criteria) {
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl() 
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
+    const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.exchanges)
     const urlListAllExchangesApi = API_ENDPOINTS.getListAllExchangesUrl()
-    const urlExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.exchanges)     
-
+    const urlMostTrustedExchangesApi = API_ENDPOINTS.getExchangesUrl(criteria.searchSuggestions)     
+ 
     let indexPageData = {}
 
     // Fetch all the data (via multiple simulataneous api calls)
     // Await for receipt and decoding of all data (before returning data set)
     await Promise.all([ fetch(urlCoinsMarketApi), fetch(urlSupportedCurrenciesApi),
                         fetch(urlListAllCoinsApi), fetch(urlTrendingSearchesApi),
-                        fetch(urlExchangesApi)
+                        fetch(urlExchangesApi), fetch(urlListAllExchangesApi),
+                        fetch(urlMostTrustedExchangesApi)
                       ]
     ).then(function (responses) {
 
@@ -134,6 +136,8 @@ function collateIndexPage(rawCoinGekoData){
                             ... prepareListOfAllCoins(rawCoinGekoData[2]),
                             ... prepareListOfTrendingCoinSearches(rawCoinGekoData[3]),
                             ... prepareExchanges(rawCoinGekoData[4]),
+                            ... prepareListOfAllExchanges(rawCoinGekoData[5]),
+                            ... prepareListExchangesWithHighestTrustScore(rawCoinGekoData[6])
                           }
     return indexPageData
   }

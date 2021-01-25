@@ -15,8 +15,7 @@ This personal project is being developed by Mark Suscens as a learning project
 Project Status:  The project is under development but is functional, using live API data.
 
 Next Steps:
-  i) Refine styling of the index and coin details page
- ii) Add an Exchange Search onto the home page - that takes user to 'exchange details' page.
+  i) Refine styling of the index, coin details, and exchange details pages.
 
 The code is organised as follows:
 - interfaceAPI.js   : Obtains the application data (via API calls), handling missing data and
