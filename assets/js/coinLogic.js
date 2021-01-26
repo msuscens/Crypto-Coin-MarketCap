@@ -21,8 +21,8 @@ let currency2DP = newCurrencyFormater(coinCriteria.currencyId, 2)
 let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
 
  try {
-    // Obtain the coin data
-    getTheCoinDetailsPageData( coinCriteria )
+    // Fetch the live data
+    getContentForCoinDetailsPage( coinCriteria )
     .then (
         (data) => {
             theCoinPageData = data
