@@ -24,12 +24,14 @@ const metadataForPage = {
     currencyId: defaultCurrency.toLowerCase(),
     rowsPerPage: 100,
     currentPageNumber: 1,
+    totalRows: null,  // unknown before data obtained
     loadTableDataFunction: reloadCoinsTable,
     populateTableFunction: populateCoinsTable
   },
   exchanges: {
     rowsPerPage: 100,
     currentPageNumber: 1,
+    totalRows: null,  // unknown before data obtained
     loadTableDataFunction: reloadExchangesTable,
     populateTableFunction: populateExchangesTable
   },
@@ -38,10 +40,6 @@ const metadataForPage = {
     currentPageNumber: 1
   }
 }
-// Save tables meta data (in html nav tab that cointains each table)
-$("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForPage.coins)
-$("#"+idElementStoringExchangesTableData).prop("tableMetadata", metadataForPage.exchanges)
-
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
 let currency2DP = newCurrencyFormater(defaultCurrency, 2)
@@ -52,9 +50,16 @@ try {
     getContentForIndexPage(metadataForPage)
     .then (
         (data) => {
-            // Save coins and exchanges data (into the html nav tab that contains each table)
+            // Save data (into the html nav tab that contains each table)
             $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
             $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
+
+            // Update the metadata and save 
+            console.log(data)
+            metadataForPage.coins.totalRows = data.all_the_coins.length
+            metadataForPage.exchanges.totalRows = data.all_the_exchanges.length
+            $("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForPage.coins)
+            $("#"+idElementStoringExchangesTableData).prop("tableMetadata", metadataForPage.exchanges)
 
             // Display Coin table (in coin nav tab)
             populateCoinsTable(data.coins)
@@ -196,6 +201,7 @@ function reloadCoinsTable() {
     getCoinTableData(tableMetadata)
     .then (
       (data) => {
+        // Store table data 
         $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
 
         // Display the coin data on the webpage
@@ -306,6 +312,7 @@ function reloadExchangesTable() {
   getExchangeTableData(tableMetadata)
   .then (
     (data) => {
+      // Store table data  
       $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
 
       // Display Exchanges table (in exchanges nav tab)

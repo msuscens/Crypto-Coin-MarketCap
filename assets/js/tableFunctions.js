@@ -83,21 +83,27 @@ function setColumnHeadersSortOrder(idSortedColumn, newSortOrder) {
 //
 function loadNextPageIntoTable(idHtmlElementWithTableData) {
   try {
-    // Determine new page number
+    // Update table page number
     const tableMetadata = $(`#${idHtmlElementWithTableData}`).prop("tableMetadata")
     tableMetadata.currentPageNumber++
     $(`#${idHtmlElementWithTableData}`).prop("tableMetadata", tableMetadata)
 
-    //  If moving on to second page of table, activate 'Previous' paging controls
+    // Enable/disabled paging controls 
     if (tableMetadata.currentPageNumber == 2) {
+      // Enable 'Previous'
       $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).removeClass("disabled")
       $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).attr("tabindex", "0")
     }
 
-    // If moving on to last possible page of table, de-activate 'Next' paging control
-    // *** TODO - Only a 'nice to have' as page still functions without it  ***
+    if ( (tableMetadata.totalRows > 0) &&
+         (tableMetadata.currentPageNumber >= Math.ceil( tableMetadata.totalRows / tableMetadata.rowsPerPage )) )
+    {
+      // On last page, so disable 'Next' 
+      $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).addClass("disabled")
+      $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).attr("tabindex", "-1")
+    }
 
-    // Display next page of data in table
+    // Display the next table page 
     tableMetadata.loadTableDataFunction()
     
     // Reset the column sort order and icons 
@@ -111,21 +117,27 @@ function loadNextPageIntoTable(idHtmlElementWithTableData) {
   
 function loadPreviousPageIntoTable(idHtmlElementWithTableData) {
   try {
-    // Determine new page number
+    // Update table page number
     const tableMetadata = $(`#${idHtmlElementWithTableData}`).prop("tableMetadata")
     tableMetadata.currentPageNumber--
     $(`#${idHtmlElementWithTableData}`).prop("tableMetadata", tableMetadata)
 
-    //  If moving back to first page, de-activate 'previous' paging controls
+    // Enable/disabled paging controls 
     if ( tableMetadata.currentPageNumber <= 1 ) {
+      // Disable 'Previous' (as on first page)
       $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).addClass("disabled")
       $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).attr("tabindex", "-1")
     }
 
-    // If moving back from last possible page of table, re-activate 'Next' paging control
-    // *** TODO - Only a 'nice to have' as page still functions without it  ***
+    if ( (tableMetadata.totalRows > 0) &&
+         (tableMetadata.currentPageNumber < Math.ceil(tableMetadata.totalRows/tableMetadata.rowsPerPage)) )
+    {
+      // Not on last page, so ensure 'Next' is enabled
+      $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).removeClass("disabled")
+      $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).attr("tabindex", "0")
+    }    
 
-    // Display previous page of coins in table
+    // Display the previous table page 
     tableMetadata.loadTableDataFunction()
 
     // Reset the column sort order and icons 
@@ -147,10 +159,13 @@ function loadFirstPageIntoTable(idHtmlElementWithTableData) {
     tableMetadata.currentPageNumber = 1
     $(`#${idHtmlElementWithTableData}`).prop("tableMetadata", tableMetadata)
 
-    //  De-activate 'previous' paging controls
+    //  Reset paging controls
     $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).addClass("disabled")
     $(`#${idHtmlElementWithTableData} li[name="previousPageTableControl"]`).attr("tabindex", "-1")
+    $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).removeClass("disabled")
+    $(`#${idHtmlElementWithTableData} li[name="nextPageTableControl"]`).attr("tabindex", "0")
 
+    // Display the first table page 
     tableMetadata.loadTableDataFunction()
 
     // Reset the column sort order and icons 
