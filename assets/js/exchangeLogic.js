@@ -12,12 +12,12 @@ const idElementStoringTradingVolumeGraphData = "exchangeTradingVolumeGraph"
 
 // Initial page parameters 
 const exchangeId = getParamFromUrl( window.location.href, "?exchangeid=")
-const graphStartDaysAgo = 365       // Default for inital page load
+const tradeVolumeGraphStartDaysAgo = 365       // Default for inital page load
 
 const metadataForPage = {
     graph: {
         exchangeId:  exchangeId,
-        graphStartDaysAgo: graphStartDaysAgo, 
+        startDaysAgo: tradeVolumeGraphStartDaysAgo, 
     },
     table: {
         exchangeId:  exchangeId,
@@ -27,7 +27,7 @@ const metadataForPage = {
         loadTableDataFunction: reloadTradingPairsTable,
         populateTableFunction: populateTradingPairsTable
     },
-    searchSuggestions: {      // Exchanges with highest 'trust score'
+    searchSuggestions: {
           rowsPerPage: 10,    
           currentPageNumber: 1
     }
@@ -51,7 +51,7 @@ try {
             $("#"+idElementStoringTradingPairsTableData).prop("tableData",data.tickers)
 
             // Add content to the webpage
-            displayExchangeHeader(data)
+            displayExchangeHeader(data.exchange)
             displayGraph(data.graph)
             populateTradingPairsTable(data.tickers)
 
@@ -77,22 +77,20 @@ try {
     console.log("ExchangesLogic.js Main code: Something went wrong: " + errMsg)
 }
 
-
 // Initialise date picker (for graph start date)
 $(function () {
   try {
     $("#myDatepicker").datepicker({
-        dateFormat: "yy-mm-dd", defaultDate: `-${graphStartDaysAgo}d`,
+        dateFormat: "yy-mm-dd", defaultDate: `-${metadataForPage.graph.startDaysAgo}d`,
         maxDate: "-5d", minDate: new Date(2010, 1 - 1, 1),
         yearRange: "2010:c"
     })
-    $("#myDatepicker").datepicker("setDate", `-${graphStartDaysAgo}d`)
+    $("#myDatepicker").datepicker("setDate", `-${metadataForPage.graph.startDaysAgo}d`)
   }
   catch (errMsg) {
     throw("In Initialise date picker: " + errMsg)
   }
 })
-
 
 function displayExchangeHeader(exchange){
     try {
@@ -126,22 +124,20 @@ function displayExchangeHeader(exchange){
     }
 }
 
-
 //
 // TRADING VOLUME GRAPH RELATED FUNCTIONS
 //
-
 $("#myShowChartButton").click(async function () {
-// Event handler for clicking 'Update' button:  Display trading volume graph (from the start date)
+// Event handler to update the trading volume graph
   try {
-      // Get new start date (saving into the graph metadata)
+      // Get and save the new start date
       const startDate = $("#myDatepicker").datepicker("getDate")
       const daysAgo = Math.ceil( getDaysAgo(startDate) )
       const graphMetadata =  $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata")
-      graphMetadata.graphStartDaysAgo = daysAgo
+      graphMetadata.startDaysAgo = daysAgo
       $("#"+idElementStoringTradingVolumeGraphData).prop("graphMetadata", graphMetadata)
       
-      // Update the trading volume coordinates (required for the graph)
+      // Get new graph's trading volume coordinates
       const newTradeHistory = await getTradingVolumeHistory(graphMetadata)
       const graph = $("#"+idElementStoringTradingVolumeGraphData).prop("graphData")
       graph.coordinates = newTradeHistory.graph.coordinates
@@ -154,58 +150,6 @@ $("#myShowChartButton").click(async function () {
       throw("In event handler: $('#myShowChartButton').click(async function ( ... ): " + errMsg)
   }
 })
-  
-
-function getGraphStyle() {
-  try {
-    return  { type: "line",
-              fill: false,
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1
-            }
-  }
-  catch (errMsg) {
-    throw("In getGraphStyle(): " + errMsg)
-  } 
-}
-  
-
-function displayGraph(graph) {
-  try {
-    // Create and display the coin price chart
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
-            type: graph.style.type,
-            data: {
-                labels: graph.coordinates.xs,
-                datasets: [{
-                    label: graph.title,
-                    data: graph.coordinates.ys,
-                    fill: graph.style.fill,
-                    backgroundColor: graph.style.backgroundColor,
-                    borderColor: graph.style.borderColor,
-                    borderWidth: graph.style.borderWidth
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            callback: function (value, index, values) {
-                                return graph.currency_symbol + value
-                            }
-                        }
-                    }]
-                }
-            }
-        });
-  }
-  catch (errMsg) {
-    throw("In displayGraph(graph): " + errMsg)
-  }
-}
-  
 
 function populateTradingPairsTable(tickers) {
 // Fill the table with the exchange's trading-pairs data
@@ -225,7 +169,6 @@ function populateTradingPairsTable(tickers) {
       throw("In populateTradingPairsTable(tickers): " + errMsg)
   }
 }
-
 
 function constructTradingPairTableRowHtml(ticker) {
 // Create and return the HTML string for a row of the Trading-pairs table
@@ -255,25 +198,17 @@ function constructTradingPairTableRowHtml(ticker) {
   }
 }
 
-
-function reloadTradingPairsTable() {
+async function reloadTradingPairsTable() {
 // Event Handler to "Refresh" the Trading Pair's table
   try {
-    // Retreive the table's metadata
+    // Retreive the table's data and save it
     const tableMetadata = $("#"+idElementStoringTradingPairsTableData).prop("tableMetadata")
+    const exchange = await getExchangeData(tableMetadata)
+    $("#"+idElementStoringTradingPairsTableData).prop("tableData", exchange.tickers)
 
-    // Obtain the coin data
-    getExchangeData(tableMetadata)
-    .then (
-      (data) => {
-        $("#"+idElementStoringTradingPairsTableData).prop("tableData", data.tickers)
-
-        // Display the tickers data in the table
-        populateTradingPairsTable(data.tickers)
-      }) 
+    populateTradingPairsTable(exchange.tickers)
   }
   catch (errMsg) {
     throw("In reloadTradingPairsTable() event handler: " + errMsg)
   }
 }
-  

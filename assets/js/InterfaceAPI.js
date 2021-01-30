@@ -38,7 +38,7 @@ const API_ENDPOINTS = {
         return (this._BASE_URL + COIN_ENDPOINT)
     },
     getCoinMarketChartUrl: function(criteria) {
-        const startDate = getPreviousDate(criteria.graphStartDaysAgo)
+        const startDate = getPreviousDate(criteria.startDaysAgo)
         const startUnixTimestamp =  Math.floor(startDate.getTime() / 1000)
         const endUnixTimestamp = Math.floor(Date.now() / 1000)
         const MARKET_CHART_ENDPOINT = "/coins/" + criteria.coinId + 
@@ -64,7 +64,7 @@ const API_ENDPOINTS = {
     },
     getExchangeVolumeChartUrl: function(criteria) {
       const VOLUME_CHART_ENDPOINT = "/exchanges/" + criteria.exchangeId + 
-                                  "/volume_chart?days=" + criteria.graphStartDaysAgo       
+                                  "/volume_chart?days=" + criteria.startDaysAgo       
       return (this._BASE_URL + VOLUME_CHART_ENDPOINT)
   }
 }
@@ -74,7 +74,7 @@ const API_ENDPOINTS = {
 //
 async function getContentForIndexPage(criteria) {
   try {
-    // Get the external (api) data 
+    // Get and prepare external (api) data for index (home) page
     const data = await getApiDataForIndexPage(criteria)
     const indexPage = collateIndexPage(data)
 
@@ -270,12 +270,13 @@ async function getExchangeTableData(criteria) {
 //
 async function getContentForCoinDetailsPage(criteria) {
   try {
-    // Get the external (api) data 
+    // Get and prepare external (api) data for coin details page
     const data = await getApiDataForCoinDetailsPage(criteria)
     const coinDetailsPage = collateCoinDetailsPage(data)
     
     // Add supplementary data
-    coinDetailsPage.currency_id = criteria.currencyId.toLowerCase()
+    coinDetailsPage.coin.currency_id = criteria.coin.currencyId.toLowerCase()
+    coinDetailsPage.graph.currency_id = criteria.graph.currencyId.toLowerCase()
 
     return coinDetailsPage
   }
@@ -287,8 +288,8 @@ async function getContentForCoinDetailsPage(criteria) {
 async function getApiDataForCoinDetailsPage(criteria) {
   try {
     // Get API URLs (for calls to CoinGeko)
-    const urlCoinApi = API_ENDPOINTS.getCoinUrl( criteria )
-    const urlMarketChartApi = API_ENDPOINTS.getCoinMarketChartUrl( criteria )
+    const urlCoinApi = API_ENDPOINTS.getCoinUrl( criteria.coin )
+    const urlMarketChartApi = API_ENDPOINTS.getCoinMarketChartUrl( criteria.graph )
     const urlSupportedCurrenciesApi = API_ENDPOINTS.getSupportedCurrenciesUrl()
     const urlListAllCoinsApi = API_ENDPOINTS.getListAllCoinsUrl()
     const urlTrendingSearchesApi = API_ENDPOINTS.getTrendingSearchesUrl()
@@ -311,7 +312,7 @@ async function getApiDataForCoinDetailsPage(criteria) {
 function collateCoinDetailsPage(rawCoinGekoData) {
   try {
     const coinDetailsPage = { ... prepareCoin(rawCoinGekoData[0], rawCoinGekoData[2]),
-                              ... prepareCoinPriceGraph(rawCoinGekoData[1]),
+                              ... prepareGraphCoordinates(rawCoinGekoData[1].prices),
                               ... prepareListOfAllCoins(rawCoinGekoData[3]),
                               ... prepareListOfTrendingCoinSearches(rawCoinGekoData[4])
                             }
@@ -324,98 +325,75 @@ function collateCoinDetailsPage(rawCoinGekoData) {
 
 function prepareCoin(coinFromCoinGeko, currencies){
   try {
-    let coin = coinFromCoinGeko   
-    coin.market_data.currencies_supported = currencies
+    // Put data into new structure required by Coin Details page
+    const data = { coin: coinFromCoinGeko }
+    data.coin.market_data.all_currencies_supported = currencies
 
     // Remove unwanted data - only if not willing to keep in our data object
     // (ie. 'delete coin.unwanted_property')
 
     // Set fallback values (for missing or bad data)
-    if (!coin.id) coin.id = "???"
-    if (!coin.symbol) coin.symbol = "?"
-    if (!coin.name) coin.name = "???"
-    if (!coin.description) coin.description = "Not available."
-    if (!coin.image.large) coin.image.large = ""   //  Use "//:0" or add default image?
+    if (!data.coin.id) data.coin.id = "???"
+    if (!data.coin.symbol) data.coin.symbol = "?"
+    if (!data.coin.name) data.coin.name = "???"
+    if (!data.coin.description) data.coin.description = "Not available."
+    if (!data.coin.image.large) data.coin.image.large = ""   //  Use "//:0" or add default image?
+    if ( !Number.isFinite( data.coin.market_data.max_supply ) ) data.coin.market_data.max_supply = NaN
 
-    if ( !Number.isFinite( coin.market_data.max_supply ) ) coin.market_data.max_supply = NaN
+    if ( !Number.isFinite( data.coin.sentiment_votes_down_percentage ) ){
+      data.coin.sentiment_votes_down_percentage = NaN
+    }
+    if ( !Number.isFinite( data.coin.sentiment_votes_up_percentage ) ){
+      data.coin.sentiment_votes_up_percentage = NaN
+    }
 
-    // Set fallback values for missing currency values
+    // Set fallbacks for missing / bad currency values
     for (let currency of currencies){
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_1y_in_currency[currency] ) ){
-            coin.market_data.price_change_percentage_1y_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_1y_in_currency[currency] ) ){
+            data.coin.market_data.price_change_percentage_1y_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_200d_in_currency[currency] ) ){
-            coin.market_data.price_change_percentage_200d_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_200d_in_currency[currency] ) ){
+            data.coin.market_data.price_change_percentage_200d_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_60d_in_currency[currency]) ){
-            coin.market_data.price_change_percentage_60d_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_60d_in_currency[currency]) ){
+            data.coin.market_data.price_change_percentage_60d_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_30d_in_currency[currency] ) ){
-            coin.market_data.price_change_percentage_30d_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_30d_in_currency[currency] ) ){
+            data.coin.market_data.price_change_percentage_30d_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_14d_in_currency[currency] ) ){
-            coin.market_data.price_change_percentage_14d_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_14d_in_currency[currency] ) ){
+            data.coin.market_data.price_change_percentage_14d_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_7d_in_currency[currency] ) ){
-            coin.market_data.price_change_percentage_7d_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_7d_in_currency[currency] ) ){
+            data.coin.market_data.price_change_percentage_7d_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_24h_in_currency[currency]) ){
-            coin.market_data.price_change_percentage_24h_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_24h_in_currency[currency]) ){
+            data.coin.market_data.price_change_percentage_24h_in_currency[currency] = NaN
         }
-        if ( !Number.isFinite( coin.market_data.price_change_percentage_1h_in_currency[currency]) ){
-            coin.market_data.price_change_percentage_1h_in_currency[currency] = NaN
+        if ( !Number.isFinite( data.coin.market_data.price_change_percentage_1h_in_currency[currency]) ){
+            data.coin.market_data.price_change_percentage_1h_in_currency[currency] = NaN
         }
     }
-    
-    // Set fallback values for other statistics
-    if ( !Number.isFinite( coin.sentiment_votes_down_percentage ) ){
-      coin.sentiment_votes_down_percentage = NaN
-    }
-    if ( !Number.isFinite( coin.sentiment_votes_up_percentage ) ){
-      coin.sentiment_votes_up_percentage = NaN
-    }
-
-    return coin
+    return data
   }
   catch (errMsg){
     throw ("In prepareCoin(coinFromCoinGeko): " + errMsg)
   }
 }
 
-// PRICE GRAPH DATA (ON COIN DETAILS PAGE)
-//
-function prepareCoinPriceGraph(marketChartDataFromCoinGeko) {
+async function getCoinPriceHistory(criteria) {
   try {
-    const graphData = {
-        price_graph: {
-            xs: [],
-            ys: []
-        }
-    }
-    // Obtain x & y data points (of dates & prices)
-    const pricesTable = [marketChartDataFromCoinGeko.prices]
-    pricesTable[0].forEach(row => {
-        const date = new Date(row[0])
-        graphData.price_graph.xs.push(date.toLocaleDateString())
-        const price = row[1]
-        graphData.price_graph.ys.push(price)
-    })
-    
-    return graphData
-  }
-  catch (errMsg){
-    throw ("In prepareCoinPriceGraph(marketChartDataFromCoinGeko): " + errMsg)
-  }
-}
+    const url = API_ENDPOINTS.getCoinMarketChartUrl(criteria)
+    const coinMarketData = await fetchApiData(url)
+    const graph = prepareGraphCoordinates( await coinMarketData.prices )
 
-async function getCoinGraphData(coinCriteria) {
-  try {
-    const url = API_ENDPOINTS.getCoinMarketChartUrl(coinCriteria)
-    const graph = prepareCoinPriceGraph( await fetchApiData(url) )
+    // Add supplementary data
+    graph.graph.currency_id = criteria.currencyId.toLowerCase()
+    
     return graph
   }
   catch (errMsg){
-    throw ("In getCoinGraphData(coinCriteria): " + errMsg)
+    throw ("In getCoinPriceHistory(coinCriteria): " + errMsg)
   }
 }
 
@@ -424,13 +402,13 @@ async function getCoinGraphData(coinCriteria) {
 //
 async function getContentForExchangeDetailsPage(criteria) {
   try {
-    // Get the external (api) data 
+    // Get and prepare external (api) data for exchange details page
     const data = await getApiDataForExchangeDetailsPage(criteria)
     const exchangeDetailsPage = collateExchangeDetailsPage(data)
 
     // Add supplementary data  
-    exchangeDetailsPage.id = criteria.table.exchangeId
-    exchangeDetailsPage.graph.currency_id = "BTC"  // Trading voulume data in Bitcoin (btc)
+    exchangeDetailsPage.exchange.id = criteria.table.exchangeId
+    exchangeDetailsPage.graph.currency_id = "btc"  // Trading voulume data in Bitcoin (btc)
 
     return exchangeDetailsPage
   }
@@ -479,29 +457,33 @@ function collateExchangeDetailsPage(rawCoinGekoData){
 
 function prepareExchange(exchangeVolumeAndTickerCoingekoData) {
   try {
-    // For now, take all the exchange data unproceessed
-    let exchange = exchangeVolumeAndTickerCoingekoData   
+    // Put data into new structure required by Exchange Details page
+    const data = { exchange: exchangeVolumeAndTickerCoingekoData,
+                   tickers: exchangeVolumeAndTickerCoingekoData.tickers
+                }
+    delete data.exchange.tickers  
 
-    // Remove unwanted data here (if not willing to keep in our data object)
+    // May remove any unwanted data here ... 
     // (ie. 'delete exchange.unwanted_property')
+    // ... we'll keep it all for now.
 
     // Set fallback values (for missing or bad data)
-    if (!exchange.name) exchange.name = "???"
-    if (!Number.isFinite(exchange.year_established)) exchange.year_established = NaN
-    if (!exchange.country) exchange.country = "Country Unknown"
-    if (!exchange.description) exchange.description = "Not available"
-    if (!exchange.url) exchange.url = "Not available"
-    if (!exchange.image) exchange.image = "" 
-    if (typeof exchange.has_trading_incentive !== "boolean") exchange.has_trading_incentive = "Unknown"
-    if (typeof exchange.centralized !== "boolean") exchange.centralized = "Unknown"
-    if (!Number.isFinite(exchange.trust_score)) exchange.trust_score = NaN
-    if (!Number.isFinite(exchange.trust_score_rank)) exchange.trust_score_rank = NaN
-    if (!Number.isFinite(exchange.trade_volume_24h_btc)) exchange.trade_volume_24h_btc = NaN
-    if (!Number.isFinite(exchange.trade_volume_24h_btc_normalized)) exchange.trade_volume_24h_btc_normalized = NaN
+    if (!data.exchange.name) data.exchange.name = "???"
+    if (!Number.isFinite(data.exchange.year_established)) data.exchange.year_established = NaN
+    if (!data.exchange.country) data.exchange.country = "Country Unknown"
+    if (!data.exchange.description) data.exchange.description = "Not available"
+    if (!data.exchange.url) data.exchange.url = "Not available"
+    if (!data.exchange.image) data.exchange.image = "" 
+    if (typeof data.exchange.has_trading_incentive !== "boolean") data.exchange.has_trading_incentive = "Unknown"
+    if (typeof data.exchange.centralized !== "boolean") data.exchange.centralized = "Unknown"
+    if (!Number.isFinite(data.exchange.trust_score)) data.exchange.trust_score = NaN
+    if (!Number.isFinite(data.exchange.trust_score_rank)) data.exchange.trust_score_rank = NaN
+    if (!Number.isFinite(data.exchange.trade_volume_24h_btc)) data.exchange.trade_volume_24h_btc = NaN
+    if (!Number.isFinite(data.exchange.trade_volume_24h_btc_normalized)) data.exchange.trade_volume_24h_btc_normalized = NaN
 
-    exchange.tickers = prepareTickers(exchangeVolumeAndTickerCoingekoData.tickers)
+    data.tickers = prepareTickers(data.tickers)
 
-    return exchange
+    return data
   }
   catch (errMsg){
     throw ("In prepareExchange(exchangeVolumeAndTickerCoingekoData): " + errMsg)
@@ -536,7 +518,7 @@ async function getExchangeData(criteria) {
     let exchange = prepareExchange(data)
 
     // Add supplementry data required by page
-    exchange.id = criteria.exchangeId
+    exchange.exchange.id = criteria.exchangeId
 
     return exchange
   }
@@ -545,33 +527,14 @@ async function getExchangeData(criteria) {
   }
 }
 
-// TRADING VOLUME GRAPH DATA (ON EXCAHNGE DETAILS PAGE)
-//
-function prepareGraphCoordinates(rawChartCoingekoData) {
-  try {
-    const graph = { coordinates: {
-                      xs: [],
-                      ys: []
-                    }
-                  }
-    // Determine x & y points for graph
-    rawChartCoingekoData.forEach(row => {
-        const date = new Date(row[0])
-        graph.coordinates.xs.push(date.toLocaleDateString())
-        const value = parseFloat(row[1])
-        graph.coordinates.ys.push(value)
-    })
-    return {graph: graph}
-  }
-  catch (errMsg){
-    throw ("In prepareGraphCoordinates(rawChartCoingekoData): " + errMsg) 
-  }
-}
-
 async function getTradingVolumeHistory(criteria) {
   try {
     const url = API_ENDPOINTS.getExchangeVolumeChartUrl(criteria)
     const graph = prepareGraphCoordinates( await fetchApiData(url) )
+
+    // Add supplementary data  
+    graph.graph.currency_id = "btc"  // Trading volume always returned in BTC
+    
     return graph
   }
   catch (errMsg){
@@ -618,5 +581,29 @@ function prepareListExchangesWithHighestTrustScore(highestTrustScoringExchangesC
   }
   catch (errMsg){
     throw ("In prepareListExchangesWithHighestTrustScore(highestTrustScoringExchangesCoingekoData): " + errMsg)
+  }
+}
+
+
+// GRAPH DATA PREPARATION - Common function
+//
+function prepareGraphCoordinates(rawChartCoingekoData) {
+  try {
+    const graph = { coordinates: {
+                      xs: [],
+                      ys: []
+                    }
+                  }
+    // Determine x & y points for graph
+    rawChartCoingekoData.forEach(row => {
+        const date = new Date(row[0])
+        graph.coordinates.xs.push(date.toLocaleDateString())
+        const value = parseFloat(row[1])
+        graph.coordinates.ys.push(value)
+    })
+    return {graph: graph}
+  }
+  catch (errMsg){
+    throw ("In prepareGraphCoordinates(rawChartCoingekoData): " + errMsg) 
   }
 }

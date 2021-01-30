@@ -55,7 +55,6 @@ try {
             $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
 
             // Update the metadata and save 
-            console.log(data)
             metadataForPage.coins.totalRows = data.all_the_coins.length
             metadataForPage.exchanges.totalRows = data.all_the_exchanges.length
             $("#"+idElementStoringCoinsTableData).prop("tableMetadata", metadataForPage.coins)
@@ -193,21 +192,17 @@ function populateCoinsTableFooter(coins) {
   }
 }
 
-function reloadCoinsTable() {
+async function reloadCoinsTable() {
 // Event Handler to "Refresh" table data
   try {
-    // Obtain the coin data
+    // Obtain the coin data ans save it
     const tableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
-    getCoinTableData(tableMetadata)
-    .then (
-      (data) => {
-        // Store table data 
-        $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
+    const data = await getCoinTableData(tableMetadata)
+    $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
 
-        // Display the coin data on the webpage
-        populateCoinsTable(data.coins)
-        populateCoinsTableFooter(data.coins)
-    }) 
+    // Update the table
+    populateCoinsTable(data.coins)
+    populateCoinsTableFooter(data.coins)
   }
   catch (errMsg) {
     throw("In reloadCoinsTable() event handler: " + errMsg)
@@ -218,8 +213,6 @@ function displayCoinPage(event){
 // Event Handler for when user clicks a row of the coin table
   try {
     const coinID = event.currentTarget.attributes.coinid.nodeValue
-
-    // Retreive the currency id 
     const tableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
     const currencyID = tableMetadata.currencyId.toLowerCase()
 
@@ -230,30 +223,25 @@ function displayCoinPage(event){
   }
 }
 
-function changeCoinTableCurrency(currencyId){
+async function changeCoinTableCurrency(currencyId){
 // Event Handler to update coin table when currency is changed
   try {
     setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
-
-    // Update the currency formatters to new currency
     currency2DP = newCurrencyFormater(currencyId, 2)
     currency0DP = newCurrencyFormater(currencyId, 0)
     
     // Set the the new currency id (in coin table's metadata)
-    const coinTableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
-    coinTableMetadata.currencyId = currencyId
-    $("#"+idElementStoringCoinsTableData).prop("tableMetadata", coinTableMetadata)
+    const coinsTableMetadata = $("#"+idElementStoringCoinsTableData).prop("tableMetadata")
+    coinsTableMetadata.currencyId = currencyId
+    $("#"+idElementStoringCoinsTableData).prop("tableMetadata", coinsTableMetadata)
 
-    // Obtain the coin data
-    getCoinTableData(metadataForTable.coins)
-    .then (
-      (data) => {
-        $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
+    // Obtain the coin data and save it
+    const data = await getCoinTableData(coinsTableMetadata)
+    $("#"+idElementStoringCoinsTableData).prop("tableData", data.coins)
 
-        // Display the coin data on the webpage
-        populateCoinsTable( data.coins )
-        populateCoinsTableFooter( data.coins )
-    })
+    // Update the coins table
+    populateCoinsTable(data.coins)
+    populateCoinsTableFooter(data.coins)
   }
   catch (errMsg) {
     throw("In changeCoinTableCurrency(currencyId) event handler: " + errMsg)
@@ -302,22 +290,18 @@ function constructExchangeTableRowHtml(exchange) {
   }
 }
   
-function reloadExchangesTable() {
+async function reloadExchangesTable() {
 // Event Handler to "Refresh" the Exchanges table
   try {
-  // Retreive the table's metadata
-  const tableMetadata = $("#"+idElementStoringExchangesTableData).prop("tableMetadata")
+    // Retreive the table's metadata
+    const tableMetadata = $("#"+idElementStoringExchangesTableData).prop("tableMetadata")
 
-  // Obtain the exchange data
-  getExchangeTableData(tableMetadata)
-  .then (
-    (data) => {
-      // Store table data  
-      $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
+    // Obtain the exchange data and save it
+    const data = await getExchangeTableData(tableMetadata)
+    $("#"+idElementStoringExchangesTableData).prop("tableData", data.exchanges)
 
-      // Display Exchanges table (in exchanges nav tab)
-      populateExchangesTable(data.exchanges)    
-    }) 
+    // Update table
+    populateExchangesTable(data.exchanges)  
   }
   catch (errMsg) {
     throw("In reloadExchangesTable(): " + errMsg)
@@ -325,10 +309,9 @@ function reloadExchangesTable() {
 }
 
 function displayExchangePage(event) {
-// Event Handler to invoke the exchange details page (e.g when user clicks a row in the exhanges table)
+// Event Handler to go the exchange details page
   try {
     const exchangeID = event.currentTarget.attributes.exchangeid.nodeValue
-
     window.location.href = `exchange.html?exchangeid=${exchangeID}`
   }
   catch (errMsg) {

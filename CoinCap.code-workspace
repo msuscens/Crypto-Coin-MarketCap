@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"debug.allowBreakpointsEverywhere": true,
+		"debug.javascript.usePreview": false,
+		"liveServer.settings.multiRootWorkspaceName": "Marks-Coin-Cap"
+	}
+}

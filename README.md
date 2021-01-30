@@ -1,38 +1,56 @@
 Crypto-Coin-MarketCap
 
-My Coinmarketcap.com inspired project:  The home (index) page show coin price and exchange data, and the coin details page displays a price graph for the selected coin
-(plus other coin statistics).
-Users may sort the tables by column (coins, exchanges and trading-pairs table).
-Clicking on a row in the coin table (or exchanges table), invokes coin details page
-(or exchange details page).  Alternatively use the 'coin search' to go to the coin 
-details page (or use the 'exchange search' on exchange details page). There's a
-currency selector for the coins table and the coin details page.
+This personal project is being developed by Mark Suscens as a learning project
+(employing HTML, CSS, Bootstrap, JQuery and JavaScript).  In it I've develped a number of
+reusable components notably : the generic table sorting and paging functions, and the 
+search component super class (used to develop the coin search and exchange search components).
+
+My Coinmarketcap.com inspired project:  Website Overview
+The home (index) page presents tables of coin prices and exchanges. The coin details page displays 
+a price graph for the selected coin (plus other coin statistics), whilst the exchange details page
+presents a trading volume graph and table of the exchange's trading pairs.  Both he graph's start
+date can be set by the user (with the graph being redrawn).
+Clicking on a row in the coin table (or exchanges table), takes the user to the coin details page
+(or exchange details page).  Using the 'coin search' (or 'exchange search') also takes the user
+to the coin (or exchange) details page. 
+On the coin price table and the coin details page there's a currency selector.
+The coin and exchange tables include table sorting controls, next and previous paging, and a
+refresh (data resync) button.
 Live coin and exchange data is obtained via CoinGeko API calls.
 
-This personal project is being developed by Mark Suscens as a learning project
-(employing HTML, CSS, Bootstrap, JQuery and JavaScript).
 
-Project Status:  The project is under development but is functional, using live API data.
+Project Status:  The project is still under development but is fully functional as it stands.
 
 Next Steps:
   i) Refine styling of the index, coin details, and exchange details pages.
+ ii) Add loading giff while page loads and upon refresh/reload of graphs and tables
+ iii) Restructure code under assets/js directory add
+      subdirectories for backend and frontend js code (eg. backend/InterfaceAPI.js and frontend/pageLogic/ ...)
+ iv) Refactor backend InterfaceAPI code and split into several files under assets/backend directory
+  v) Refactor code to add an app.js initiation file
+ vi) Change thrown errors from developer relevant to user friendly messages and display appropriately.
 
 The code is organised as follows:
-- interfaceAPI.js   : Obtains the application data (via API calls), handling missing data and
-                      collating into structure expected by the index, coin, and exchange pages
+- interfaceAPI.js   : Backend data layer for the application.  Obtains the application data (via API 
+                      calls), handling missing data and collating into objects expected by the index, coin details, and exchange details pages.
 - index.html        : Home page that present coin price and exchanges.
-- indexLogic.js     : Home page javascript code (including adding dynamically created components, 
-                      eg. coin search component)
-- coin.html         : Coin details page; displays a coin price graph and coin statistics 
-- coinLogic.js      : Coin details page dynamic code (javascript)
-- exchange.html     : Exchange details page; displays a trading volume graph and trading pairs table 
-- exchange.js       : Exchange details page's dynamic code (javascript)
+- indexLogic.js     : Home page javascript code (ie. adding dynamically created components 
+                      and event handlers).
+- coin.html         : Coin details page; displays a coin price graph and coin statistics.
+- coinLogic.js      : Coin details page javascript code (ie. adding dynamically created components 
+                      and event handlers).
+- exchange.html     : Exchange details page; displays a trading volume graph and trading pairs table. 
+- exchange.js       : Exchange details page's javascript code (ie. adding dynamically created
+                      componentseg and event handlers).
 
 - styles.css        : The css styles for the project, i.e the index and coin pages
 
 - tableFunctions.js : Generic Event handling functions used for all tables in application
                       for table column sorting, paging and table data reload (refresh)
-                      - see below for dcumentaion on use
+                      - see below for documentaion on use
+
+- graphFunctions.js : Functions used to create graphs in the application
+                      (i.e. for graphs on coin details and exchange details pages) 
 
 - componentClassess.js      : Custom dynamic components. Includes the 'coin search',
                               'exchange search', and 'currency selector' components

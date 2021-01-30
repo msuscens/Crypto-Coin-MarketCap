@@ -6,42 +6,64 @@
 // 2. Enabling VS Code's Error Checking [by adding comment '// @ts-check' ] 
 // @ts-check
 
-// Coin page metadata
-const graphStartDaysAgo = 365       // Default for inital page load
-const coinCriteria = {
-    coinId:  getParamFromUrl( window.location.href, "?coinid="),
-    currencyId: getParamFromUrl( window.location.href, "&currencyid="),
-    graphStartDaysAgo: graphStartDaysAgo }
+// Where to store (and retrive) the coin details and price graph data
+const idElementStoringCoinData = "coinDetailsTable" 
+const idElementStoringCoinPriceGraphData = "coinPriceGraph" 
 
-// Data for the coin page
-let theCoinPageData = {}            // No coin page data obtained as yet
+// Initial coin page parameters 
+const coinId = getParamFromUrl( window.location.href, "?coinid=")
+const currencyId = getParamFromUrl( window.location.href, "&currencyid=")
+const priceGraphStartDaysAgo = 365       // Default for inital page load
+
+const metadataForPage = {
+    graph: {
+        coinId:  coinId,
+        currencyId: currencyId,        
+        startDaysAgo: priceGraphStartDaysAgo
+    },
+    coin: {
+        coinId:  coinId,
+        currencyId: currencyId
+    },
+    searchSuggestions: {
+          rowsPerPage: 10,    
+          currentPageNumber: 1
+    }
+}
+// Save meta data (in html elements as properties)
+$("#"+idElementStoringCoinData).prop("coinMetadata",metadataForPage.coin)
+$("#"+idElementStoringCoinPriceGraphData).prop("graphMetadata",metadataForPage.graph)
 
 // Initialise the currency formatter functions (for 0 & 2 decimail places)
-let currency2DP = newCurrencyFormater(coinCriteria.currencyId, 2)
-let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
+let currency2DP = newCurrencyFormater(metadataForPage.coin.currencyId, 2)
+let currency0DP = newCurrencyFormater(metadataForPage.coin.currencyId, 0)
 
  try {
     // Fetch the live data
-    getContentForCoinDetailsPage( coinCriteria )
+    getContentForCoinDetailsPage( metadataForPage )
     .then (
         (data) => {
-            theCoinPageData = data
-
-            // Display the data on the coin page, section by section        
-            displayCoinHeader( theCoinPageData )
-
-            const priceGraphCriteria = setPriceGraphCriteria( theCoinPageData )
-            displayGraph( priceGraphCriteria )
-
-            displayPriceStats( theCoinPageData )
-            displayMarketStats( theCoinPageData )
-            displayDescription( theCoinPageData )
-            displayFooter( theCoinPageData )
+            // Set graph's additional characteristics
+            data.graph.style = getGraphStyle()
+            data.graph.title = `Price of ${data.coin.name} (in ${data.graph.currency_id.toUpperCase()})`
+            data.graph.currency_symbol =  getCurrencySymbol(data.graph.currency_id)
+          
+            // Save page's coin and price graph data
+            $("#"+idElementStoringCoinData).prop("coinData",data.coin)
+            $("#"+idElementStoringCoinPriceGraphData).prop("graphData",data.graph)
+            
+            // Display the data on the page        
+            displayHeader( data.coin )
+            displayGraph( data.graph )
+            displayPriceStats( data.coin )
+            displayMarketStats( data.coin )
+            displayDescription( data.coin )
+            displayFooter( data.coin )
 
             // Add the currency selector component onto the page
             const selectorCriteria =  { id: "currencySelectorComponent",
-                                        currencies: theCoinPageData.market_data.currencies_supported,
-                                        selectedCurrency: theCoinPageData.currency_id,
+                                        currencies: data.coin.market_data.all_currencies_supported,
+                                        selectedCurrency: data.coin.currency_id,
                                         currencyUpdateFunc: changeCurrencyOnCoinPage
                                       }
             const currencySelector = new CurrencySelectorComponent(selectorCriteria)
@@ -60,8 +82,8 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
                                                          suggestions_list_title: "Trending searches:",
                                                          searchPool_list_title: "Top matching coins:"
                                                       },
-                                              searchPool: theCoinPageData.all_the_coins,
-                                              suggestions: theCoinPageData.trending_coin_searches,
+                                              searchPool: data.all_the_coins,
+                                              suggestions: data.trending_coin_searches,
                                               maxItemsInSearchList: 8                                           
                                              }
             const coinSearchComponent = new CoinSearchComponent( coinSearchComponentData )
@@ -71,24 +93,22 @@ let currency0DP = newCurrencyFormater(coinCriteria.currencyId, 0)
     console.log("Something went wrong in CoinLogic.js: " + errMsg)
 }
 
-
 // Initialise date picker (for coin price graph's start date)
 $(function () {
   try {
     $("#myDatepicker").datepicker({
-        dateFormat: "yy-mm-dd", defaultDate: `-${graphStartDaysAgo}d`,
+        dateFormat: "yy-mm-dd", defaultDate: `-${metadataForPage.graph.startDaysAgo}d`,
         maxDate: "-5d", minDate: new Date(2010, 1 - 1, 1),
         yearRange: "2010:c"
     })
-    $("#myDatepicker").datepicker("setDate", `-${graphStartDaysAgo}d`)
+    $("#myDatepicker").datepicker("setDate", `-${metadataForPage.graph.startDaysAgo}d`)
   }
   catch (errMsg) {
     throw("In Initialise date picker: " + errMsg)
   }
 })
 
-
-function displayCoinHeader(coin) {
+function displayHeader(coin) {
   try {
     // Display the basic coin data
     const coinNameLine = `<img src="${coin.image.large}" border=3 height=50 width=50>
@@ -103,10 +123,9 @@ function displayCoinHeader(coin) {
     $("#priceInBtcLine").html(coinBtcPriceLine)
   }
   catch (errMsg){
-    throw ("In displayCoinHeader(coin): " + errMsg)
+    throw ("In displayHeader(coin): " + errMsg)
   }
 }
-
 
 function displayPriceStats(coin) {
   try {
@@ -141,7 +160,6 @@ function displayPriceStats(coin) {
   }
 }
 
-
 function getPriceChangeHtml(coin, baseAttribute)
 {
   try {
@@ -165,7 +183,6 @@ function getPriceChangeHtml(coin, baseAttribute)
   }    
 }
 
-
 function getPrice24hrLowHighHtml(coin)
 {
   try {
@@ -181,7 +198,6 @@ function getPrice24hrLowHighHtml(coin)
     throw ("In getPrice24hrLowHighHtml(coin): " + errMsg)
   }
 }
-
 
 function getPriceAllTimeHtml(coin, highOrLow)
 {
@@ -212,7 +228,6 @@ function getPriceAllTimeHtml(coin, highOrLow)
   }
 }
 
-
 function getPriceSentimentHtml(coin)
 {
   try {
@@ -234,7 +249,6 @@ function getPriceSentimentHtml(coin)
     throw ("In getPriceSentimentHtml(coin): " + errMsg)
   }
 }
-
 
 function displayMarketStats(coin) {
   try {
@@ -263,7 +277,6 @@ function displayMarketStats(coin) {
   }
 }
 
-
 function displayDescription(coin) {
   try {
     const coinDescriptionLine = `<p>${coin.description.en}</p>`
@@ -273,7 +286,6 @@ function displayDescription(coin) {
     throw ("In displayDescription(coin): " + errMsg)
   }
 }
-
 
 function displayFooter(coin) {
   try {
@@ -285,121 +297,60 @@ function displayFooter(coin) {
   }
 }
 
-
-// PRICE CHART RELATED FUNCTIONS
-
-// Event handler for clicking 'Show Chart' button
 $("#myShowChartButton").click(async function () {
-    try {
-        // Get the new graph data (given start date selected by user)
-        const startDate = $("#myDatepicker").datepicker("getDate")
-        const daysAgo = getDaysAgo( startDate )
-        coinCriteria.graphStartDaysAgo = daysAgo
-        
-        const graph = await getCoinGraphData(coinCriteria)
-        theCoinPageData.price_graph = graph.price_graph
+// Event handler to update the coin price graph
+  try {
+    // Get and save the new start date
+    const startDate = $("#myDatepicker").datepicker("getDate")
+    const daysAgo = Math.ceil( getDaysAgo(startDate) )
+    const graphMetadata =  $("#"+idElementStoringCoinPriceGraphData).prop("graphMetadata")
+    graphMetadata.startDaysAgo = daysAgo
+    $("#"+idElementStoringCoinPriceGraphData).prop("graphMetadata", graphMetadata)
+      
+    // Get new graph's coin price coordinates
+    const newCoinPriceHistory = await getCoinPriceHistory(graphMetadata)
+    const graph = $("#"+idElementStoringCoinPriceGraphData).prop("graphData")
+    graph.coordinates = newCoinPriceHistory.graph.coordinates
+    $("#"+idElementStoringCoinPriceGraphData).prop("graphData", graph)
 
-        // Display the graph
-        const priceGraphCriteria = setPriceGraphCriteria(theCoinPageData)
-        displayGraph( priceGraphCriteria )
-
-    }
-    catch (errMsg) {
-        throw("In event handler: $('#myShowChartButton').click(async function ( ... ): " + errMsg)
-    }
+    // Display the graph
+    displayGraph(graph)
+  }
+  catch (errMsg) {
+    throw("In event handler: $('#myShowChartButton').click(async function ( ... ): " + errMsg)
+  }
 })
 
-
-function setPriceGraphCriteria(coin){
+async function changeCurrencyOnCoinPage(currencyId) {
+// Event Handler: Changes currency of both the price graph and all the coin statistics on page
   try {
-    const startDate = $("#myDatepicker").datepicker("getDate");
-    const graph = {
-        coinName: coin.name,
-        currencyId: coin.currency_id,
-        currencySymbol: getCurrencySymbol(coin.currency_id),
-        startUnixTimestamp: Math.floor(startDate.getTime() / 1000),
-        endUnixTimestamp: Math.floor(Date.now() / 1000),
-        xs: coin.price_graph.xs,
-        ys: coin.price_graph.ys,
-        title: `Price of ${coin.name} (in ${coin.currency_id.toUpperCase()})`,
-        type: "line",
-        fill: false,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
-    }
-    return graph
+    setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
+    currency2DP = newCurrencyFormater(currencyId, 2)
+    currency0DP = newCurrencyFormater(currencyId, 0)
+
+    // Update page metadata data to new currency
+    const coinMetadata = $("#"+idElementStoringCoinData).prop("coinMetadata")
+    const graphMetadata = $("#"+idElementStoringCoinPriceGraphData).prop("graphMetadata")
+    const coin = $("#"+idElementStoringCoinData).prop("coinData")
+    coinMetadata.currencyId = graphMetadata.currencyId = coin.currency_id = currencyId.toLowerCase()
+    $("#"+idElementStoringCoinData).prop("coinMetadata", coinMetadata)
+    $("#"+idElementStoringCoinPriceGraphData).prop("graphMetadata", graphMetadata)
+    $("#"+idElementStoringCoinData).prop("coinData", coin)
+
+    // Prepare graph data (in new currency)
+    const data = await getCoinPriceHistory(graphMetadata)
+    data.graph.style = getGraphStyle()
+    data.graph.title = `Price of ${coin.name} (in ${data.graph.currency_id.toUpperCase()})`
+    data.graph.currency_symbol = getCurrencySymbol(data.graph.currency_id)
+    $("#"+idElementStoringCoinPriceGraphData).prop("graphData", data.graph)
+
+    // Update the page
+    displayGraph(data.graph)
+    displayHeader(coin)
+    displayPriceStats(coin)
+    displayMarketStats(coin)
   }
   catch (errMsg) {
-    throw("In setPriceGraphCriteria(coin): " + errMsg)
+    throw("In EH changeCurrencyOnCoinPage(): " + errMsg)
   }
 }
-
-
-function displayGraph(graph) {
-  try {
-    // Create and display the coin price chart
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
-            type: graph.type,
-            data: {
-                labels: graph.xs,
-                datasets: [{
-                    label: graph.title,
-                    data: graph.ys,
-                    fill: graph.fill,
-                    backgroundColor: graph.backgroundColor,
-                    borderColor: graph.borderColor,
-                    borderWidth: graph.borderWidth
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            callback: function (value, index, values) {
-                                return graph.currencySymbol + value
-                            }
-                        }
-                    }]
-                }
-            }
-        });
-  }
-  catch (errMsg) {
-    throw("In displayGraph(graph): " + errMsg)
-  }
-}
-
-
-// Event Handler for when user clicks on a currency (in currency selector)
-function changeCurrencyOnCoinPage(currencyId) {
-    try {
-        setCookie(currencyCookie, currencyId, cookieDurationInSeconds)
-
-        // Update the currency formatters to new currency
-        currency2DP = newCurrencyFormater(currencyId, 2)
-        currency0DP = newCurrencyFormater(currencyId, 0)
-
-        // Fetch price graph data in new currency  
-        theCoinPageData.currency_id = coinCriteria.currencyId = currencyId.toLowerCase()     
-        getCoinGraphData(coinCriteria)
-        .then (
-            (graphData) => {
-                theCoinPageData.price_graph = graphData.price_graph
-
-                // Display the graph
-                const priceGraphCriteria = setPriceGraphCriteria(theCoinPageData)      
-                displayGraph( priceGraphCriteria )
-            }
-        )
-
-        // Update those page sections that cointain currency based informaion      
-        displayCoinHeader( theCoinPageData )
-        displayPriceStats( theCoinPageData )
-        displayMarketStats( theCoinPageData )
-    }
-    catch (errMsg) {
-      throw("In EH changeCurrencyOnCoinPage(): " + errMsg)
-    }
-  }
