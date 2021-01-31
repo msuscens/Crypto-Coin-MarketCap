@@ -18,57 +18,74 @@ The coin and exchange tables include table sorting controls, next and previous p
 refresh (data resync) button.
 Live coin and exchange data is obtained via CoinGeko API calls.
 
-
-Project Status:  The project is still under development but is fully functional as it stands.
+Status:  The project is under development but is fully functional as it stands.
 
 Next Steps:
   i) Refine styling of the index, coin details, and exchange details pages.
  ii) Add loading giff while page loads and upon refresh/reload of graphs and tables
- iii) Restructure code under assets/js directory add
-      subdirectories for backend and frontend js code (eg. backend/InterfaceAPI.js and frontend/pageLogic/ ...)
- iv) Refactor backend InterfaceAPI code and split into several files under assets/backend directory
-  v) Refactor code to add an app.js initiation file
- vi) Change thrown errors from developer relevant to user friendly messages and display appropriately.
+iii) Refactor backend InterfaceAPI code and split into several files under assets/backend directory
+  v) Refactor to add an app.js initiation file (to replace current initatiaion via index.html)
+ vi) Change thrown errors from developer relevant to user messages / error handling
+vii) Update/complete documentation on reuseable search components developed during this project.
 
-The code is organised as follows:
-- interfaceAPI.js   : Backend data layer for the application.  Obtains the application data (via API 
-                      calls), handling missing data and collating into objects expected by the index, coin details, and exchange details pages.
-- index.html        : Home page that present coin price and exchanges.
-- indexLogic.js     : Home page javascript code (ie. adding dynamically created components 
-                      and event handlers).
+Code Files are organised as follows:
+/
+- index.html        : Home page that presents a table of coin prices and a table of exchanges.
+                      NB. To initiate application invoke index.html (there's no app.js yet).
+
 - coin.html         : Coin details page; displays a coin price graph and coin statistics.
-- coinLogic.js      : Coin details page javascript code (ie. adding dynamically created components 
-                      and event handlers).
+
 - exchange.html     : Exchange details page; displays a trading volume graph and trading pairs table. 
-- exchange.js       : Exchange details page's javascript code (ie. adding dynamically created
-                      componentseg and event handlers).
 
-- styles.css        : The css styles for the project, i.e the index and coin pages
-
-- tableFunctions.js : Generic Event handling functions used for all tables in application
-                      for table column sorting, paging and table data reload (refresh)
-                      - see below for documentaion on use
-
-- graphFunctions.js : Functions used to create graphs in the application
-                      (i.e. for graphs on coin details and exchange details pages) 
-
-- componentClassess.js      : Custom dynamic components. Includes the 'coin search',
-                              'exchange search', and 'currency selector' components
-                              (used on the index, coin, and exchange pages)
-- searchComponentClass.js   : Search Component Super Class for the 'coin search'
-                              and 'exchange search' component classes
+/assets/css/
+- styles.css        : The css styles for the application.
 - searchComponentStyles.css : The css styles for the Serach Component super class
 
+/assets/js/backend/
+- interfaceAPI.js   : Backend data layer for the application.  Obtains the application data (via API 
+                      calls), adds fallback values for missing data and collates into object format required by the index, coin details, and exchange details pages.
 
-- helperFunctions.js        : Functions supporting page logic implementaion
-                              (but are not application specific).
+/assets/js/frontend/
+- helperFunctions.js  : Functions supporting frontend page logic implementaion (application independent).
+
+/assets/js/frontend/pageLogic/
+- indexLogic.js     : Home page javascript code; adds dynamically created html components to page,
+                     and contains page's event handlers.
+
+- coinLogic.js      : Coin details page javascript code; adds dynamically created html components
+                    to page, and contains page's event handlers.
+
+- exchange.js       : Exchange details page's javascript code; adds dynamically created html 
+                    components to page and contain's page's event handlers.
+
+/assets/js/frontend/components/
+- tableFunctions.js : Generic Event handling functions used for all tables in the application
+                      for table column sorting, paging and table data reload (refresh)
+                      - see below for documentaion on their use/re-use.
+
+- graphFunctions.js : Functions used to create graphs in the application
+                      (i.e. for graphs on coin details and exchange details pages). 
+
+- componentClassess.js  : Custom dynamic components. Includes the 'coin search',
+                          'exchange search', and 'currency selector' components
+                          (used on the index, coin, and exchange pages).
+
+- searchComponentClass.js  : Search Component Super Class for the 'coin search' and
+                            'exchange search' component classes.
+
+In additioan there are:
+/
+- README                  : This file!
+- CoinCap.code-workspace  : The Visual Studio Code's workspace file for this application.
+
+/.vscode
+- launch.json             : Configuration file for launching the VS Code debugger with this application.
 
 
-Note: Requires local server to be running, eg. in terminal window:
+Note: Application requires local server to be running, eg. in terminal window:
   cd to code directory, and then
   python3 -m http.server
   (Or run from VS Code using LiveServer)
-
 
 ___________________________________________________________________________
 
