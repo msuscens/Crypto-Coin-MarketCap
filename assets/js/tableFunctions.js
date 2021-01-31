@@ -10,7 +10,6 @@
 //
 function sortTableRows(event, idHtmlElementWithTableData) {
   try {
-    console.log("In sortTableRows():")
     // Retreive table data and table's metadata
     const tableData = $(`#${idHtmlElementWithTableData}`).prop("tableData")
     const tableMetadata = $(`#${idHtmlElementWithTableData}`).prop("tableMetadata")
@@ -76,7 +75,6 @@ function setColumnHeadersSortOrder(idSortedColumn, newSortOrder) {
     throw("In setColumnHeadersSortOrder(idSortedColumn, newSortOrder): " + errMsg)
   }
 }
-
 
 //  
 // GENERIC TABLE PAGING - NEXT ANDF PREVIOUS EVENT HANDLERS
