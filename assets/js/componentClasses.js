@@ -37,7 +37,7 @@ class CurrencySelectorComponent {
 
       // Construct the html for the component
       let htmlCurrencySelector = `<div class="dropdown">
-                                    <button id="${this._idButton}" class="btn-light dropbtn">
+                                    <button id="${this._idButton}" class="btn-light dropbtn dropdown-toggle">
                                       ${component.selectedCurrency.toUpperCase()}
                                     </button>
                                     <div id="${this._idDropdown}" class="dropdown-content">
